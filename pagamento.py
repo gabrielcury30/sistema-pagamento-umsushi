@@ -26,7 +26,7 @@ class Carrinho:
             self.pedidos.remove(item)
 
     def total_Pedido(self):
-         return sum(item.preco for item in self.pedidos)
+         return sum(item.preco for item in self.pedidos) 
 
    
             
@@ -51,5 +51,5 @@ carrinho1 = Carrinho("Usuario João")
 carrinho1.adicionar_Item(menu[0])
 carrinho1.adicionar_Item(menu[2])
 
-checkout1 = Checkout(carrinho1, "Cartão")
+checkout1 = Checkout(carrinho1, "Pix")
 checkout1.pagar()
