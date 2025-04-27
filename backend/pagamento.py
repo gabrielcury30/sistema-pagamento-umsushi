@@ -25,7 +25,7 @@ class Carrinho:
         if item in self.pedidos:
             self.pedidos.remove(item)
 
-    def total_Pedido(self):
+    def total_Pedido(self) -> float:
          return sum(item.preco for item in self.pedidos) 
 
    

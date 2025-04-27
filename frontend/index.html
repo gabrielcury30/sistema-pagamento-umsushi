@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pagamento - UM SUSHI</title>
+    <script defer src="index.js"></script>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main>
+      <section class="section">
+        <div class="header">
+          <img src="./assets/logo.jpeg" alt="Logo do restaurante UM SUSHI" />
+        </div>
+        <div class="header__pagamento">
+          <img
+            src="https://cdn.pixabay.com/photo/2021/09/20/08/55/credit-card-6640238_1280.png"
+            alt="Ícone de cartão de crédito"
+          />
+          <h1>CARTÃO DE CRÉDITO</h1>
+        </div>
+
+        <form
+          action="#"
+          onsubmit="return false"
+          method="post"
+          id="section__form"
+        >
+          <div>
+            <input
+              required
+              type="text"
+              placeholder="Número do cartão"
+              id="numero__cartao"
+            />
+            <div id="div__validade">
+              <label for="validade__cartao">Validade do cartão </label>
+              <input
+                required
+                type="month"
+                placeholder="MM/AA"
+                id="validade__cartao"
+              />
+            </div>
+            <input
+              required
+              type="password"
+              pattern="\d{3,4}"
+              id="cvv_cartao"
+              placeholder="CVV "
+            />
+            <button type="submit" id="form__submit">Finalizar compra</button>
+          </div>
+          <div>
+            <input
+              required
+              type="text"
+              placeholder="Nome completo"
+              id="nome__usuario"
+            />
+            <input required type="text" placeholder="CPF" id="cpf__usuario" />
+            <div id="div__resumo"><h3>Resumo do pedido</h3></div>
+          </div>
+        </form>
+      </section>
+    </main>
+  </body>
+</html>
