@@ -1,0 +1,66 @@
+@startuml
+
+package "Clientes" {
+    class Endereco {
+        - rua: str
+        - numero: int
+        - bairro: str
+        - cidade: str
+        - cep: str
+    }
+
+    class Cliente {
+        - nome: str
+        - email: str
+        - telefone: str
+        - endereco: Endereco
+    }
+}
+
+package "Pedidos" {
+    class Item {
+        - nome: str
+        - preco: float
+    }
+
+    class Pedido {
+        - cliente: Cliente
+        - itens: List<Item>
+        - total: float
+        - data_pedido: datetime
+        + calcular_total(): float
+        + gerar_recibo(): str
+    }
+}
+
+package "Pagamentos" {
+    abstract class Pagamento {
+        - pedido: Pedido
+        - status: enum
+        + processar_pagamento()
+    }
+
+    class PIX {
+        - chave_pix: str
+        + processar_pagamento()
+    }
+
+    class Cartao {
+        - numero: str
+        - cvv: str
+        - validade: str
+        - tipo: enum
+        + processar_pagamento()
+    }
+
+    Pagamento <|-- PIX
+    Pagamento <|-- Cartao
+}
+
+Cliente "1" -- "1" Endereco
+Pedido "1" -- "1" Cliente
+Pedido "1" -- "*" Item
+
+Pagamento "1" -- "1" Pedido
+
+@enduml
