@@ -37,15 +37,23 @@ class Checkout:
 
     def pagar(self):
         total = self.carrinho.total_Pedido()
-        print("Pedido total de:", total, "para", self.carrinho.usuarioId)
+    print("Pedido total de:", total, "para", self.carrinho.usuarioId)
 
-        if(self.metodo == "Cartão"):
-            print("Insira o numero do seu cartão")
-            self.cartao = input()
-        elif(self.metodo == "Pix"): 
-            print("Código de barras para pagar com pix: ||l|l|l|||||ll|l|l|ll|l||ll|")
-
-
+    if self.metodo == "Cartão":
+        print("Insira o número do seu cartão:")
+        self.cartao = input()
+    elif self.metodo == "Pix": 
+        print("Código de barras para pagar com pix: ||l|l|l|||||ll|l|l|ll|l||ll|")
+    elif self.metodo == "Dinheiro":
+        print(f"Valor a ser pago: R${total:.2f}")
+        valor_recebido = float(input("Digite o valor recebido em dinheiro: "))
+        if valor_recebido < total:
+            print("Valor insuficiente. Pagamento não autorizado.")
+        else:
+            troco = valor_recebido - total
+            print(f"Pagamento realizado com sucesso! Troco: R${troco:.2f}")
+    else:
+        print("Método de pagamento inválido.")
 
 carrinho1 = Carrinho("Usuario João")
 carrinho1.adicionar_Item(menu[0])
