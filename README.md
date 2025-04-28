@@ -12,7 +12,7 @@ Este repositório contém o desenvolvimento do Sistema de Pagamento para o clien
 Adiciona classes para cuidar do sistema de pagamento:
 
 - **Cliente**: Representa um cliente no sistema. Contém informações pessoais como nome, e-mail, telefone e endereço.
-- **Endereco**: Contém os detalhes do endereço de um cliente, como rua, número, bairro, cidade e CEP.
+- **Endereco**: Contém os detalhes do endereço de um cliente, como rua, número, bairro, cidade, CEP e complemento.
 - **Item**: Representa um item no cardápio de pedidos. Contém informações sobre o nome e o preço do item.
 - **Pedido (Mock)**: Representa um pedido feito por um cliente. Armazena o cliente, os itens do pedido, o total do pedido e a data em que foi realizado. Também possui métodos para calcular o total e gerar um recibo.
 - **Pagamento (Abstrato)**: Classe abstrata que define a estrutura básica para processar pagamentos. Contém o pedido relacionado e o status do pagamento, com um método abstrato para processar o pagamento.
@@ -37,6 +37,8 @@ Módulo: Clientes
     └── bairro: str  
     └── cidade: str  
     └── cep: str  
+    └── complemento: str  
+
 
 Módulo: Pedidos
     Classe: Item  

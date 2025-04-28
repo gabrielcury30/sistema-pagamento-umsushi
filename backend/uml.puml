@@ -7,6 +7,7 @@ package "Clientes" {
         - bairro: str
         - cidade: str
         - cep: str
+        - complemento: str
     }
 
     class Cliente {
@@ -29,7 +30,6 @@ package "Pedidos" {
         - total: float
         - data_pedido: datetime
         + calcular_total(): float
-        + gerar_recibo(): str
     }
 }
 
@@ -57,10 +57,22 @@ package "Pagamentos" {
     Pagamento <|-- Cartao
 }
 
-Cliente "1" -- "1" Endereco
+Cliente "1" -- "1" Endereco  
 Pedido "1" -- "1" Cliente
 Pedido "1" -- "*" Item
 
 Pagamento "1" -- "1" Pedido
 
 @enduml
+
+/' 
+pagamento(pai)
+pix e cartao (filhos)
+'/
+
+/' 
+1 cliente=1 endereço
+1 pedido=1 cliente
+1 pedido=varios itens
+1 pagamento=1 pedido
+'/
