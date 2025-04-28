@@ -30,6 +30,7 @@ package "Pedidos" {
         - total: float
         - data_pedido: datetime
         + calcular_total(): float
+        + gerar_recibo(): str
     }
 }
 
