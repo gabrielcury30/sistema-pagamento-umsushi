@@ -73,6 +73,28 @@ class Cartao(Pagamento):
         print(f"Processando pagamento via Cartão ({self.tipo.value}) para {self.pedido.usuario_id}. Total: R$ {self.pedido.total_pedido():.2f}")
         self.status = "Pago"
 
+class Dinheiro(Pagamento):
+    """Classe para pagamento em Dinheiro"""
+    def __init__(self, pedido: Carrinho, valor_recebido: float):
+        super().__init__(pedido)
+        self.valor_recebido = valor_recebido
+
+    def processar_pagamento(self):
+        total = self.pedido.total_pedido()
+        if not self.pedido.pedidos:
+            print("Erro: O carrinho está vazio!")
+            return
+
+        if self.valor_recebido < total:
+            print(f"Erro: Valor insuficiente. Total: R$ {total:.2f}, recebido: R$ {self.valor_recebido:.2f}")
+            return
+
+        troco = self.valor_recebido - total
+        print(f"Pagamento em dinheiro recebido de {self.pedido.usuario_id}. Total: R$ {total:.2f}")
+        print(f"Valor recebido: R$ {self.valor_recebido:.2f} - Troco: R$ {troco:.2f}")
+        self.status = "Pago"
+
+
 # Criando um carrinho e adicionando itens
 carrinho1 = Carrinho("Usuário João")
 carrinho1.adicionar_item(menu[0])
