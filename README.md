@@ -69,6 +69,11 @@ Módulo: Pagamentos
     └── validade: str  
     └── tipo: enum  
     └── processar_pagamento()  
+
+ Classe: Dinheiro (Herda de Pagamento)  
+    └── valor_recebido: float  
+    └── processar_pagamento()  
+
 ```
 
 ---
