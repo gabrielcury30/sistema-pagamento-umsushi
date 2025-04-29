@@ -70,7 +70,7 @@ Módulo: Pagamentos
     └── tipo: enum  
     └── processar_pagamento()  
 
- Classe: Dinheiro (Herda de Pagamento)  
+    Classe: Dinheiro (Herda de Pagamento)  
     └── valor_recebido: float  
     └── processar_pagamento()  
 
