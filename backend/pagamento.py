@@ -5,6 +5,7 @@ from enum import Enum
 class MetodoPagamento(Enum):
     PIX = "Pix"
     CARTAO = "Cartão"
+    DINHEIRO = "Dinheiro"
 
 @dataclass
 class ItemMenu:
@@ -92,7 +93,9 @@ class Dinheiro(Pagamento):
         troco = self.valor_recebido - total
         print(f"Pagamento em dinheiro recebido de {self.pedido.usuario_id}. Total: R$ {total:.2f}")
         print(f"Valor recebido: R$ {self.valor_recebido:.2f} - Troco: R$ {troco:.2f}")
-        self.status = "Pago"
+        print(f"Pagamento em dinheiro selecionado. O valor será recebido na entrega.")
+        self.status = "Aguardando Pagamento"
+	
 
 
 # Criando um carrinho e adicionando itens
@@ -107,3 +110,7 @@ pagamento_pix.processar_pagamento()
 # Testando pagamento via Cartão
 pagamento_cartao = Cartao(carrinho1, "1234-5678-9012-3456", "123", "12/25", MetodoPagamento.CARTAO)
 pagamento_cartao.processar_pagamento()
+
+# Testando pagamento via Dinheiro
+pagamento_dinheiro = Dinheiro(carrinho1, 150.0)
+pagamento_dinheiro.processar_pagamento()
