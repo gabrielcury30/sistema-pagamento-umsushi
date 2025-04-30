@@ -6,7 +6,6 @@ Este repositório contém o desenvolvimento do Sistema de Pagamento para o clien
 
 - [Atividade 1](#atividade-1)
 - [Estrutura de Classes](#estrutura-de-classes)
-- [Diagrama UML](#diagrama-uml)
 
 ## Atividade 1
 
@@ -20,6 +19,8 @@ Adiciona classes para cuidar do sistema de pagamento:
 - **PIX (Herda de Pagamento)**: Representa o pagamento via PIX. Herdada da classe Pagamento, ela adiciona a chave PIX para realizar o pagamento.
 - **Cartao (Herda de Pagamento)**: Representa o pagamento via cartão. Herdada da classe Pagamento, ela inclui informações como número do cartão, CVV, validade e tipo de cartão (crédito ou débito).
 - **Dinheiro (Herda de Pagamento)**: Representa o pagamento via dinheiro. Herdada da classe Pagamento, ela adiciona o valor a ser recebido na hora da entrega.
+
+
 
 ## Estrutura de Classes
 
@@ -75,9 +76,5 @@ Módulo: Pagamentos
     └── processar_pagamento()  
 
 ```
-
-## Diagrama UML
-
-![Diagrama UML](frontend/assets/Um_Sushi.drawio.png)
 
 ---
