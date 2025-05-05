@@ -1,151 +1,129 @@
-from dataclasses import dataclass
+from abc import ABC, abstractmethod
 from enum import Enum
-import logging
-import random
+from datetime import datetime
+import re, random, uuid, logging
 
-# Configuração de logging para registrar eventos, ao invés de print
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# --- CONFIGURAÇÃO DE LOGGING BÁSICA ---
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
+
+# --- ENUMS ---
 class StatusPagamento(Enum):
     PENDENTE = "Pendente"
-    PROCESSANDO = "Processando"
-    PAGO = "Pago"
-    FALHA = "Falha"
+    APROVADO = "Aprovado"
+    RECUSADO = "Recusado"
 
-# Criando um Enum para os métodos de pagamento
-class MetodoPagamento(Enum):
-    PIX = "Pix"
-    CARTAO = "Cartão"
-    DINHEIRO = "Dinheiro"
 
-class PagamentoPixFalhou(Exception):
-    pass
+# --- STUB PEDIDO (mínimo necessário) ---
+class Pedido:
+    def __init__(self, cliente_nome: str, total: float):
+        self.id = str(uuid.uuid4())
+        self.cliente_nome = cliente_nome
+        self.total = total
+        self.data_pedido = datetime.now()
+        self.status_pagamento = StatusPagamento.PENDENTE
 
-@dataclass
-class ItemMenu:
-    nome: str
-    preco: float
+    def gerar_recibo(self) -> str:
+        return (
+            f"--- Recibo {self.id} ---\n"
+            f"Data: {self.data_pedido}\n"
+            f"Cliente: {self.cliente_nome}\n"
+            f"Total: R${self.total:.2f}\n"
+            f"Status: {self.status_pagamento.value}\n"
+        )
 
-menu = [ 
-    ItemMenu("Ovo de salmão fresco", 75.90),
-    ItemMenu("Ovo de salmão maçaricado", 75.90), 
-    ItemMenu("Hot balls - queijo", 22.99)
-]
 
-class Carrinho:
-    def __init__(self, usuario_id: str):
-        self.usuario_id = usuario_id
-        self.pedidos = []
+# --- STUB LOGGER e MENSAGERIA ---
+class Logger:
+    def registrar(self, mensagem: str, nivel: str = "INFO"):
+        getattr(logging, nivel.lower())(mensagem)
 
-    def adicionar_item(self, item: ItemMenu):
-        self.pedidos.append(item)
-    
-    def remover_item(self, item: ItemMenu):
-        if item in self.pedidos:
-            self.pedidos.remove(item)
 
-    def total_pedido(self) -> float:
-        return sum(item.preco for item in self.pedidos)
+class Mensageria:
+    def enviar_notificacao(self, mensagem: str):
+        print(f"[Notificação] {mensagem}")
 
-class Pagamento:
-    """Classe base para processar pagamentos"""
-    def __init__(self, pedido: Carrinho):
+
+# --- CLASSE ABSTRATA DE PAGAMENTO ---
+class Pagamento(ABC):
+    def __init__(self, pedido: Pedido, logger: Logger, mensageria: Mensageria):
         self.pedido = pedido
+        self.logger = logger
+        self.mensageria = mensageria
         self.status = StatusPagamento.PENDENTE
 
+    @abstractmethod
     def processar_pagamento(self):
-        raise NotImplementedError("Este método deve ser implementado pelas subclasses.")
+        pass
 
+
+# --- SUBCLASSE PIX ---
 class Pix(Pagamento):
-    """Classe para pagamento via Pix"""
-    def __init__(self, pedido: Carrinho, chave_pix: str):
-        super().__init__(pedido)
+    def __init__(self, pedido: Pedido, chave_pix: str,
+                 logger: Logger, mensageria: Mensageria):
+        super().__init__(pedido, logger, mensageria)
         self.chave_pix = chave_pix
-        self.codigo_transacao = None # Adicionando código de transação via PIX
+        self.codigo_transacao = None
 
-    def processar_pagamento(self):
-        if not self.pedido.pedidos:
-            logging.error("Erro: O carrinho está vazio!")
-            return
+    def _validar_chave(self):
+        padrao = r"[^@]+@[^@]+\.[^@]+|\d{11}|[0-9A-Fa-f]{32}"
+        if not re.fullmatch(padrao, self.chave_pix):
+            raise ValueError(f"Chave PIX inválida: {self.chave_pix}")
 
-        self.status = StatusPagamento.PROCESSANDO
-        logging.info(f"Pagamento via PIX iniciado para {self.pedido.usuario_id}. Total: R$ {self.pedido.total_pedido():.2f}")
-        logging.info(f"Use a chave PIX {self.chave_pix} para pagar.")
-        
-        # Simulação de pagamento com uma tratação de erros simples
+    def _gerar_qr_code(self) -> str:
+        total_centavos = int(self.pedido.total * 100)
+        return f"PIX://{self.chave_pix}/{total_centavos}-{random.randint(0,9999)}"
+
+    def processar_pagamento(self) -> str:
         try:
-            self.codigo_transacao = f"PIX-{random.randint(100000, 999999)}"       
-            logging.info(f"Código de transação gerado: {self.codigo_transacao}")
+            self.logger.registrar(f"[PIX] Iniciando pagamento para pedido {self.pedido.id}")
+            self._validar_chave()
 
-            # Simulando um sucesso (90%) e falha (10%) aleatória com números apenas para teste
+            # Gera QR code
+            self.codigo_transacao = self._gerar_qr_code()
+            # Simula 90% de chance de aprovação
             if random.random() < 0.9:
-                self.status = StatusPagamento.PAGO
-                logging.info(f"Pagamento PIX para {self.pedido.usuario_id} APROVADO.")
+                self.status = StatusPagamento.APROVADO
+                self.logger.registrar(f"[PIX] Aprovado: {self.codigo_transacao}")
+                self.mensageria.enviar_notificacao(
+                    f"Olá {self.pedido.cliente_nome}, seu QR Code PIX é: {self.codigo_transacao}"
+                )
             else:
-                self.status = StatusPagamento.FALHA
-                raise PagamentoPixFalhou("Falha na simulação do pagamento PIX")
-        
-        except PagamentoPixFalhou as e:
-            logging.error(f"Erro no pagamento PIX: {e}")
+                raise RuntimeError("Falha simulada no PIX")
+
+        except Exception as e:
+            self.status = StatusPagamento.RECUSADO
+            self.logger.registrar(f"[PIX] Recusado: {e}", nivel="ERROR")
+
         finally:
-            logging.info(f"Status do pagamento PIX: {self.status.value}")
+            # Gera recibo e registra
+            self.pedido.status_pagamento = self.status
+            recibo = self.pedido.gerar_recibo()
+            self.logger.registrar(f"[PIX] Recibo gerado:\n{recibo}")
+            return self.codigo_transacao
 
+
+# --- SUBCLASSES STUB: implementação posterior ---
 class Cartao(Pagamento):
-    """Classe para pagamento via Cartão"""
-    def __init__(self, pedido: Carrinho, numero: str, cvv: str, validade: str, tipo: MetodoPagamento):
-        super().__init__(pedido)
-        self.numero = numero
-        self.cvv = cvv
-        self.validade = validade
-        self.tipo = tipo
+    pass
 
-    def processar_pagamento(self):
-        if not self.pedido.pedidos:
-            print("Erro: O carrinho está vazio!")
-            return
-
-        print(f"Processando pagamento via Cartão ({self.tipo.value}) para {self.pedido.usuario_id}. Total: R$ {self.pedido.total_pedido():.2f}")
-        self.status = "Pago"
 
 class Dinheiro(Pagamento):
-    """Classe para pagamento em Dinheiro"""
-    def __init__(self, pedido: Carrinho, valor_recebido: float):
-        super().__init__(pedido)
-        self.valor_recebido = valor_recebido
-
-    def processar_pagamento(self):
-        total = self.pedido.total_pedido()
-        if not self.pedido.pedidos:
-            print("Erro: O carrinho está vazio!")
-            return
-
-        if self.valor_recebido < total:
-            print(f"Erro: Valor insuficiente. Total: R$ {total:.2f}, recebido: R$ {self.valor_recebido:.2f}")
-            return
-
-        troco = self.valor_recebido - total
-        print(f"Pagamento em dinheiro recebido de {self.pedido.usuario_id}. Total: R$ {total:.2f}")
-        print(f"Valor recebido: R$ {self.valor_recebido:.2f} - Troco: R$ {troco:.2f}")
-        print(f"Pagamento em dinheiro selecionado. O valor será recebido na entrega.")
-        self.status = "Aguardando Pagamento"
-	
+    pass
 
 
-# Criando um carrinho e adicionando itens
-carrinho1 = Carrinho("Usuário João")
-carrinho1.adicionar_item(menu[0])
-carrinho1.adicionar_item(menu[2])
+# --- TESTE ---
+if __name__ == "__main__":
+    # Cria stubs
+    logger = Logger()
+    mensageria = Mensageria()
 
-# Testando pagamento via PIX
-pagamento_pix = Pix(carrinho1, "chave123456")
-pagamento_pix.processar_pagamento()
-print()
+    # Cria um pedido simulado de R$ 120,50
+    pedido = Pedido(cliente_nome="João", total=120.50)
 
-# Testando pagamento via Cartão
-pagamento_cartao = Cartao(carrinho1, "1234-5678-9012-3456", "123", "12/25", MetodoPagamento.CARTAO)
-pagamento_cartao.processar_pagamento()
-print()
-
-# Testando pagamento via Dinheiro
-pagamento_dinheiro = Dinheiro(carrinho1, 150.0)
-pagamento_dinheiro.processar_pagamento()
+    # Processa PIX
+    pix = Pix(pedido, chave_pix="meu@email.com",
+              logger=logger, mensageria=mensageria)
+    qr = pix.processar_pagamento()
+    print(f"\nQR Code retornado: {qr}")
