@@ -2,8 +2,7 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from datetime import datetime
 import re, random, uuid, logging
-import time
-
+import requests
 # --- CONFIGURAÇÃO DE LOGGING BÁSICA ---
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
@@ -88,18 +87,22 @@ class Pix(Pagamento):
     def _gerar_qr_code(self) -> str:
         total_centavos = int(self.pedido.total * 100)
         return f"PIX://{self.chave_pix}/{total_centavos}-{random.randint(0,9999)}"
-
+ 
     def processar_pagamento(self) -> str:
         try:
             self.logger.registrar(f"[PIX] Iniciando pagamento para pedido {self.pedido.id}")
             self._validar_chave()
 
-            time.sleep(random.uniform(0.5, 2.0))
-
-            # Gera QR code
+        # Gera QR code 
             self.codigo_transacao = self._gerar_qr_code()
-            # Simula 90% de chance de aprovação
-            if random.random() < 0.9:
+
+        # Chama a API externa
+            resp = requests.get("https://yesno.wtf/api", timeout=5)
+            resp.raise_for_status()
+            data = resp.json()
+
+            # Decide aprovação com base no "answer" ("yes" : aprovado, "no" : recusado)
+            if data.get("answer") == "yes":
                 self.status = StatusPagamento.APROVADO
                 self.logger.registrar(f"[PIX] Aprovado: {self.codigo_transacao}")
                 self.mensageria.enviar_notificacao(
@@ -109,16 +112,15 @@ class Pix(Pagamento):
                 raise RuntimeError("Falha simulada no PIX")
 
         except Exception as e:
-            self.status = StatusPagamento.RECUSADO
-            self.logger.registrar(f"[PIX] Recusado: {e}", nivel="ERROR")
+         self.status = StatusPagamento.RECUSADO
+         self.logger.registrar(f"[PIX] Recusado: {e}", nivel="ERROR")
 
         finally:
-            # Gera recibo e registra
+            # Atualiza o pedido e gera recibo
             self.pedido.status_pagamento = self.status
             recibo = self.pedido.gerar_recibo()
             self.logger.registrar(f"[PIX] Recibo gerado:\n{recibo}")
             return self.codigo_transacao
-
 
 # --- SUBCLASSES STUB: implementação posterior ---
 class Cartao(Pagamento):
@@ -136,11 +138,11 @@ if __name__ == "__main__":
     mensageria = Mensageria()
 
     # Cria um pedido simulado de R$ 120,50
-    pedido = Pedido(cliente_nome="João", total=120.50)
+    pedido = Pedido("João", 120.50)
 
     # Processa PIX
-    pix = Pix(pedido, chave_pix="meu@email.com",
-              logger=logger, mensageria=mensageria)
+    pix = Pix(pedido, "meu@email.com",
+              logger, mensageria)
     pedido.definir_pagamento(pix)
     qr = pix.processar_pagamento()
     pedido.gerar_recibo()
