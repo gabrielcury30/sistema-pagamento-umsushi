@@ -7,6 +7,10 @@ import re, random, uuid, logging
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
+class MetodoPagamento(Enum):
+    PIX = "Pix"
+    CARTAO = "Cartão"
+    DINHEIRO = "Dinheiro"
 
 # --- ENUMS ---
 class StatusPagamento(Enum):
@@ -20,19 +24,25 @@ class Pedido:
     def __init__(self, cliente_nome: str, total: float):
         self.id = str(uuid.uuid4())
         self.cliente_nome = cliente_nome
-        self.total = total
+        self.valor_total = total
         self.data_pedido = datetime.now()
         self.status_pagamento = StatusPagamento.PENDENTE
+        self.pagamento = None 
+    
+    def definir_pagamento(self, pagamento):
+        self.pagamento = pagamento
 
-    def gerar_recibo(self) -> str:
-        return (
+    def gerar_recibo(self):
+        if self.pagamento and self.status_pagamento == StatusPagamento.APROVADO:
+            return (
             f"--- Recibo {self.id} ---\n"
             f"Data: {self.data_pedido}\n"
             f"Cliente: {self.cliente_nome}\n"
-            f"Total: R${self.total:.2f}\n"
+            f"Total: R${self.valor_total:.2f}\n"
             f"Status: {self.status_pagamento.value}\n"
-        )
-
+            f"Método de Pagamento: {self.pagamento.metodo.value}\n"
+            )
+        return {"erro": "Pagamento não aprovado ou inexistente"}
 
 # --- STUB LOGGER e MENSAGERIA ---
 class Logger:
@@ -47,11 +57,13 @@ class Mensageria:
 
 # --- CLASSE ABSTRATA DE PAGAMENTO ---
 class Pagamento(ABC):
-    def __init__(self, pedido: Pedido, logger: Logger, mensageria: Mensageria):
+    def __init__(self, pedido: Pedido, logger: Logger, mensageria: Mensageria, metodo: MetodoPagamento):
         self.pedido = pedido
         self.logger = logger
         self.mensageria = mensageria
         self.status = StatusPagamento.PENDENTE
+        self.metodo= metodo
+
 
     @abstractmethod
     def processar_pagamento(self):
@@ -62,9 +74,10 @@ class Pagamento(ABC):
 class Pix(Pagamento):
     def __init__(self, pedido: Pedido, chave_pix: str,
                  logger: Logger, mensageria: Mensageria):
-        super().__init__(pedido, logger, mensageria)
+        super().__init__(pedido, logger, mensageria, MetodoPagamento.PIX)
         self.chave_pix = chave_pix
         self.codigo_transacao = None
+        
 
     def _validar_chave(self):
         padrao = r"[^@]+@[^@]+\.[^@]+|\d{11}|[0-9A-Fa-f]{32}"
@@ -72,7 +85,7 @@ class Pix(Pagamento):
             raise ValueError(f"Chave PIX inválida: {self.chave_pix}")
 
     def _gerar_qr_code(self) -> str:
-        total_centavos = int(self.pedido.total * 100)
+        total_centavos = int(self.pedido.valor_total * 100)
         return f"PIX://{self.chave_pix}/{total_centavos}-{random.randint(0,9999)}"
 
     def processar_pagamento(self) -> str:
@@ -125,5 +138,8 @@ if __name__ == "__main__":
     # Processa PIX
     pix = Pix(pedido, chave_pix="meu@email.com",
               logger=logger, mensageria=mensageria)
+    pedido.definir_pagamento(pix)
     qr = pix.processar_pagamento()
+    pedido.gerar_recibo()
     print(f"\nQR Code retornado: {qr}")
+    
