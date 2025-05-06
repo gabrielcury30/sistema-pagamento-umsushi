@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from datetime import datetime
 import re, random, uuid, logging
+import time
 
 # --- CONFIGURAÇÃO DE LOGGING BÁSICA ---
 logging.basicConfig(level=logging.INFO,
@@ -24,7 +25,7 @@ class Pedido:
     def __init__(self, cliente_nome: str, total: float):
         self.id = str(uuid.uuid4())
         self.cliente_nome = cliente_nome
-        self.valor_total = total
+        self.total = total
         self.data_pedido = datetime.now()
         self.status_pagamento = StatusPagamento.PENDENTE
         self.pagamento = None 
@@ -38,7 +39,7 @@ class Pedido:
             f"--- Recibo {self.id} ---\n"
             f"Data: {self.data_pedido}\n"
             f"Cliente: {self.cliente_nome}\n"
-            f"Total: R${self.valor_total:.2f}\n"
+            f"Total: R${self.total:.2f}\n"
             f"Status: {self.status_pagamento.value}\n"
             f"Método de Pagamento: {self.pagamento.metodo.value}\n"
             )
@@ -85,13 +86,15 @@ class Pix(Pagamento):
             raise ValueError(f"Chave PIX inválida: {self.chave_pix}")
 
     def _gerar_qr_code(self) -> str:
-        total_centavos = int(self.pedido.valor_total * 100)
+        total_centavos = int(self.pedido.total * 100)
         return f"PIX://{self.chave_pix}/{total_centavos}-{random.randint(0,9999)}"
 
     def processar_pagamento(self) -> str:
         try:
             self.logger.registrar(f"[PIX] Iniciando pagamento para pedido {self.pedido.id}")
             self._validar_chave()
+
+            time.sleep(random.uniform(0.5, 2.0))
 
             # Gera QR code
             self.codigo_transacao = self._gerar_qr_code()
