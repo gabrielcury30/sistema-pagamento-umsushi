@@ -224,19 +224,19 @@ if __name__ == "__main__":
     pedido.gerar_recibo()
     print(f"\nQR Code retornado: {qr}")
 
-    
+    pedido = Pedido("Julianna", 120.50)
      # Processa CARTÃO DE CRÉDITO
     cartao_credito = CartaoCredito(pedido, numero_cartao="1234567812345678",
-                                   nome_titular="Joao da Silva", validade="12/26", cvv="123",
+                                   nome_titular="Julianna da Silva", validade="12/26", cvv="123",
                                    logger=logger, mensageria=mensageria)
     pedido.definir_pagamento(cartao_credito)
     cartao_credito.processar_pagamento()
     print(pedido.gerar_recibo())
 
-    
+    pedido = Pedido("Giovanna", 120.50)
     # OU CARTÃO DE DÉBITO
     cartao_debito = CartaoDebito(pedido, numero_cartao="8765432187654321",
-                                  nome_titular="Joao da Silva", validade="11/25", cvv="321",
+                                  nome_titular="Giovanna Souza", validade="11/25", cvv="321",
                                   logger=logger, mensageria=mensageria)
     pedido.definir_pagamento(cartao_debito)
     cartao_debito.processar_pagamento()
