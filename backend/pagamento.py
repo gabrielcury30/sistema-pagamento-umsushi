@@ -122,10 +122,86 @@ class Pix(Pagamento):
             self.logger.registrar(f"[PIX] Recibo gerado:\n{recibo}")
             return self.codigo_transacao
 
-# --- SUBCLASSES STUB: implementação posterior ---
+# --- SUBCLASSE CARTÃO ---
 class Cartao(Pagamento):
-    pass
+    def __init__(self, pedido: Pedido, numero_cartao: str, nome_titular: str,
+                 validade: str, cvv: str, logger: Logger, mensageria: Mensageria, metodo: MetodoPagamento):
+        super().__init__(pedido, logger, mensageria, metodo)
+        self.numero_cartao = numero_cartao
+        self.nome_titular = nome_titular
+        self.validade = validade
+        self.cvv = cvv
 
+    def _validar_cartao(self):
+        if not re.fullmatch(r"\d{16}", self.numero_cartao):
+            raise ValueError("Número do cartão inválido")
+        if not re.fullmatch(r"\d{3}", self.cvv):
+            raise ValueError("CVV inválido")
+        if not re.fullmatch(r"(0[1-9]|1[0-2])\/\d{2}", self.validade):
+            raise ValueError("Validade inválida")
+
+# --- SUBCLASSE CARTÃO DE CRÉDITO ---
+class CartaoCredito(Cartao):
+    def __init__(self, pedido: Pedido, numero_cartao: str, nome_titular: str,
+                 validade: str, cvv: str, logger: Logger, mensageria: Mensageria):
+        super().__init__(pedido, numero_cartao, nome_titular, validade, cvv,
+                         logger, mensageria, MetodoPagamento.CARTAO)
+
+    def processar_pagamento(self):
+        try:
+            self.logger.registrar(f"[CRÉDITO] Processando pagamento para pedido {self.pedido.id}")
+            self._validar_cartao()
+
+            
+
+            if random.random() < 0.85:
+                self.status = StatusPagamento.APROVADO
+                self.logger.registrar("[CRÉDITO] Pagamento aprovado.")
+                self.mensageria.enviar_notificacao(f"Pagamento no crédito aprovado para {self.pedido.cliente_nome}")
+            else:
+                raise RuntimeError("Transação recusada pela operadora")
+
+        except Exception as e:
+            self.status = StatusPagamento.RECUSADO
+            self.logger.registrar(f"[CRÉDITO] Pagamento recusado: {e}", nivel="ERROR")
+
+        finally:
+            self.pedido.status_pagamento = self.status
+            recibo = self.pedido.gerar_recibo()
+            self.logger.registrar(f"[CRÉDITO] Recibo gerado:\n{recibo}")
+            return self.status
+
+
+# --- SUBCLASSE CARTÃO DE DÉBITO ---
+class CartaoDebito(Cartao):
+    def __init__(self, pedido: Pedido, numero_cartao: str, nome_titular: str,
+                 validade: str, cvv: str, logger: Logger, mensageria: Mensageria):
+        super().__init__(pedido, numero_cartao, nome_titular, validade, cvv,
+                         logger, mensageria, MetodoPagamento.CARTAO)
+
+    def processar_pagamento(self):
+        try:
+            self.logger.registrar(f"[DÉBITO] Processando pagamento para pedido {self.pedido.id}")
+            self._validar_cartao()
+
+            
+
+            if random.random() < 0.95:
+                self.status = StatusPagamento.APROVADO
+                self.logger.registrar("[DÉBITO] Pagamento aprovado.")
+                self.mensageria.enviar_notificacao(f"Pagamento no débito aprovado para {self.pedido.cliente_nome}")
+            else:
+                raise RuntimeError("Falha na autenticação bancária")
+
+        except Exception as e:
+            self.status = StatusPagamento.RECUSADO
+            self.logger.registrar(f"[DÉBITO] Pagamento recusado: {e}", nivel="ERROR")
+
+        finally:
+            self.pedido.status_pagamento = self.status
+            recibo = self.pedido.gerar_recibo()
+            self.logger.registrar(f"[DÉBITO] Recibo gerado:\n{recibo}")
+            return self.status
 
 class Dinheiro(Pagamento):
     pass
@@ -147,4 +223,23 @@ if __name__ == "__main__":
     qr = pix.processar_pagamento()
     pedido.gerar_recibo()
     print(f"\nQR Code retornado: {qr}")
+
+    
+     # Processa CARTÃO DE CRÉDITO
+    cartao_credito = CartaoCredito(pedido, numero_cartao="1234567812345678",
+                                   nome_titular="Joao da Silva", validade="12/26", cvv="123",
+                                   logger=logger, mensageria=mensageria)
+    pedido.definir_pagamento(cartao_credito)
+    cartao_credito.processar_pagamento()
+    print(pedido.gerar_recibo())
+
+    
+    # OU CARTÃO DE DÉBITO
+    cartao_debito = CartaoDebito(pedido, numero_cartao="8765432187654321",
+                                  nome_titular="Joao da Silva", validade="11/25", cvv="321",
+                                  logger=logger, mensageria=mensageria)
+    pedido.definir_pagamento(cartao_debito)
+    cartao_debito.processar_pagamento()
+    print(pedido.gerar_recibo())
+
     
