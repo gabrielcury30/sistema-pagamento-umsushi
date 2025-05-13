@@ -53,9 +53,14 @@ package "Pagamentos" {
         - tipo: enum
         + processar_pagamento()
     }
+    class Dinheiro {
+	- valor_recebido: float
+	+ processar_pagamento()
+}
 
     Pagamento <|-- PIX
     Pagamento <|-- Cartao
+    Pagamento <|-- Dinheiro
 }
 
 Cliente "1" -- "1" Endereco  
@@ -68,7 +73,7 @@ Pagamento "1" -- "1" Pedido
 
 /' 
 pagamento(pai)
-pix e cartao (filhos)
+pix, cartao e dinheiro (filhos)
 '/
 
 /' 
