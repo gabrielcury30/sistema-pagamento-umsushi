@@ -13,6 +13,7 @@ class StatusPagamento(Enum):
     PENDENTE = "Pendente"
     APROVADO = "Aprovado"
     RECUSADO = "Recusado"
+    AGUARDANDO_PAGAMENTO = "Aguardar Pagamento na Entrega"
 
 class TipoCartao(Enum):
     CREDITO = "Crédito"
@@ -37,19 +38,31 @@ class Pedido:
     def gerar_recibo(self) -> str:
         if not self.pagamento:
             metodo = "N/A"
+            valor_pago = troco = ""
+
         else:
+            valor_pago = ""
+            troco = ""
+            
             if hasattr(self.pagamento, 'tipo'):
                 metodo = self.pagamento.tipo.value
+            elif self.pagamento.__class__.__name__ == "Dinheiro":
+                metodo = "Dinheiro"
+                valor_pago = f"Valor Pago: R${self.pagamento.valor_pago:.2f}\n"
+                troco = f"Troco: R${self.pagamento.troco:.2f}\n"
             else:
                 metodo = "PIX"
+
         return (
             f"--- Recibo {self.id} ---\n"
             f"Data: {self.data_pedido.strftime('%d/%m/%Y %H:%M:%S')}\n"
             f"Cliente: {self.cliente_nome}\n"
             f"Total: R${self.total:.2f}\n"
+            f"{valor_pago}{troco}"
             f"Status: {self.status_pagamento.value}\n"
             f"Método de Pagamento: {metodo}\n"
         )
+
 
 # --- STUB LOGGER e MENSAGERIA ---
 class Logger:

@@ -1,6 +1,7 @@
 # backend/main.py
 from pagamentos.pix         import Pix
 from pagamentos.cartao      import CartaoCredito, CartaoDebito
+from pagamentos.dinheiro     import Dinheiro
 from pagamentos.base        import Pedido, Logger, Mensageria
 
 def processar_pix():
@@ -40,12 +41,20 @@ def processar_cartao_debito():
     )
     cd.processar_pagamento()
 
+def processar_dinheiro():
+    logger = Logger()
+    mensageria = Mensageria()
+    pedido = Pedido("Rafael", 140.00)
+    dinheiro = Dinheiro(pedido, 155.00, logger, mensageria)
+    dinheiro.processar_pagamento()
+
 if __name__ == "__main__":
     print("Escolha o método de pagamento:")
     print("1. PIX")
     print("2. Cartão de Crédito")
     print("3. Cartão de Débito")
-    escolha = input("Digite 1, 2 ou 3: ")
+    print("4. Dinheiro")
+    escolha = input("Digite 1, 2, 3 ou 4: ")
 
     if escolha == "1":
         processar_pix()
@@ -53,5 +62,7 @@ if __name__ == "__main__":
         processar_cartao_credito()
     elif escolha == "3":
         processar_cartao_debito()
+    elif escolha == "4":
+        processar_dinheiro()
     else:
         print("Opção inválida!")
