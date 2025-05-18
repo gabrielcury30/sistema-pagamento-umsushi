@@ -11,6 +11,8 @@ class StatusPagamento(Enum):
     PROCESSANDO = "Processando"
     PAGO = "Pago"
     FALHA = "Falha"
+    AGUARDANDO_PAGAMENTO = "Aguardar Pagamento na Entrega"
+
 
 # Criando um Enum para os métodos de pagamento
 class MetodoPagamento(Enum):
@@ -109,7 +111,7 @@ class Cartao(Pagamento):
 
 class Dinheiro(Pagamento):
     """Classe para pagamento em Dinheiro"""
-    def __init__(self, pedido: Carrinho, valor_recebido: float):
+    def __init__(self, pedido: Carrinho, valor_recebido: float = None):
         super().__init__(pedido)
         self.valor_recebido = valor_recebido
 
@@ -119,16 +121,28 @@ class Dinheiro(Pagamento):
             print("Erro: O carrinho está vazio!")
             return
 
+        # Quando o pagamento em dinheiro é escolhido, o status é "Aguardando Pagamento"
+        print(f"Pagamento em dinheiro selecionado. O pagamento será feito na entrega.")
+        self.status = StatusPagamento.AGUARDANDO_PAGAMENTO
+        print(f"Status inicial: {self.status.value}")
+
+    def validar_pagamento(self):
+        """Valida o pagamento ao receber o valor na entrega"""
+        total = self.pedido.total_pedido()
+        if self.valor_recebido is None:
+            print("Erro: O pagamento ainda não foi realizado.")
+            return
+
         if self.valor_recebido < total:
             print(f"Erro: Valor insuficiente. Total: R$ {total:.2f}, recebido: R$ {self.valor_recebido:.2f}")
+            self.status = StatusPagamento.FALHA  
             return
 
         troco = self.valor_recebido - total
-        print(f"Pagamento em dinheiro recebido de {self.pedido.usuario_id}. Total: R$ {total:.2f}")
+        print(f"Pagamento recebido de {self.pedido.usuario_id}. Total: R$ {total:.2f}")
         print(f"Valor recebido: R$ {self.valor_recebido:.2f} - Troco: R$ {troco:.2f}")
-        print(f"Pagamento em dinheiro selecionado. O valor será recebido na entrega.")
-        self.status = "Aguardando Pagamento"
-	
+        self.status = StatusPagamento.PAGO 
+        print(f"Status atualizado: {self.status.value}")
 
 
 # Criando um carrinho e adicionando itens
@@ -149,3 +163,5 @@ print()
 # Testando pagamento via Dinheiro
 pagamento_dinheiro = Dinheiro(carrinho1, 150.0)
 pagamento_dinheiro.processar_pagamento()
+pagamento_dinheiro.validar_pagamento()
+print()
