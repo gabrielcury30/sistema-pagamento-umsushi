@@ -30,7 +30,7 @@ class Pix(Pagamento):
                 self.status = StatusPagamento.APROVADO
                 self.logger.registrar(f"[PIX] Aprovado: {self.codigo_transacao}")
                 self.mensageria.enviar_notificacao(
-                    f"Olá {self.pedido.cliente_nome}, QR: {self.codigo_transacao}"
+                    f"Olá {self.pedido.cliente.nome}, QR: {self.codigo_transacao}"
                 )
             else:
                 raise RuntimeError("Transação PIX recusada pela API")

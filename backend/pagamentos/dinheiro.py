@@ -22,7 +22,7 @@ class Dinheiro(Pagamento):
 
             self.logger.registrar(f"[DINHEIRO] Pagamento aprovado. Troco: R${self.troco:.2f}")
             self.mensageria.enviar_notificacao(
-                f"Pagamento em dinheiro confirmado para {self.pedido.cliente_nome}. Troco: R${self.troco:.2f}"
+                f"Pagamento em dinheiro confirmado para {self.pedido.cliente.nome}. Troco: R${self.troco:.2f}"
             )
 
         except Exception as e:

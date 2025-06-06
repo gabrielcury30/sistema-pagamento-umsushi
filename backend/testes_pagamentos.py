@@ -1,14 +1,18 @@
 # backend/main.py
+from clientes.cadastro import cadastrar_cliente
 from pagamentos.pix         import Pix
 from pagamentos.cartao      import CartaoCredito, CartaoDebito
 from pagamentos.dinheiro     import Dinheiro
 from pagamentos.base        import Pedido, Logger, Mensageria
 
 def processar_pix():
-    logger     = Logger()
+    logger = Logger()
     mensageria = Mensageria()
-    pedido     = Pedido("João", 120.50)
-    pix        = Pix(pedido, "meu@email.com", logger, mensageria)
+    cliente = cadastrar_cliente()
+    total = float(input("Total do pedido: "))
+    pedido = Pedido(cliente, total)
+    chave_pix = input("Digite a chave PIX: ")
+    pix = Pix(pedido, chave_pix, logger, mensageria)
     pix.processar_pagamento()
 
 def processar_cartao_credito():

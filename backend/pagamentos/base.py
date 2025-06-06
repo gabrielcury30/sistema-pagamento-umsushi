@@ -1,4 +1,6 @@
 # pagamentos/base.py
+from clientes.endereco import Endereco
+from clientes.clientes import Cliente
 from abc import ABC, abstractmethod
 from enum import Enum
 from datetime import datetime
@@ -21,9 +23,9 @@ class TipoCartao(Enum):
 
 # --- STUB PEDIDO (mínimo necessário) ---
 class Pedido:
-    def __init__(self, cliente_nome: str, total: float):
+    def __init__(self, cliente: Cliente, total: float):
         self.id = str(uuid.uuid4())
-        self.cliente_nome = cliente_nome
+        self.cliente = cliente
         self.total = total
         self.data_pedido = datetime.now()
         self.status_pagamento = StatusPagamento.PENDENTE
@@ -56,7 +58,8 @@ class Pedido:
         return (
             f"--- Recibo {self.id} ---\n"
             f"Data: {self.data_pedido.strftime('%d/%m/%Y %H:%M:%S')}\n"
-            f"Cliente: {self.cliente_nome}\n"
+            f"Cliente: {self.cliente.nome}\n"
+            f"Endereço: {self.cliente.endereco.rua}, {self.cliente.endereco.numero}, {self.cliente.endereco.bairro}, {self.cliente.endereco.cidade}\n"
             f"Total: R${self.total:.2f}\n"
             f"{valor_pago}{troco}"
             f"Status: {self.status_pagamento.value}\n"
