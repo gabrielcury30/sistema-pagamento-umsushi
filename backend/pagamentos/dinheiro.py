@@ -1,5 +1,5 @@
-# pagamentos/dinheiro.py
-from .base import Pagamento, StatusPagamento, Pedido, Logger, Mensageria
+from pedido.pedido import Pedido
+from pagamentos.base import Pagamento, StatusPagamento, Logger, Mensageria
 import re, random
 
 class Dinheiro(Pagamento):
@@ -13,12 +13,14 @@ class Dinheiro(Pagamento):
     def processar_pagamento(self):
         try:
             self.logger.registrar(f"[DINHEIRO] Processando pagamento para o pedido {self.pedido.id}")
-            
-            if self.valor_pago < self.pedido.total:
-                raise ValueError(f"Valor insuficiente. Pago: R${self.valor_pago:.2f}, Total: R${self.pedido.total:.2f}")
+
+            total_pedido = self.pedido.calcular_total()
+
+            if self.valor_pago < total_pedido:
+                raise ValueError(f"Valor insuficiente. Pago: R${self.valor_pago:.2f}, Total: R${total_pedido:.2f}")
 
             self.status = StatusPagamento.APROVADO
-            self.troco = self.valor_pago - self.pedido.total
+            self.troco = self.valor_pago - total_pedido
 
             self.logger.registrar(f"[DINHEIRO] Pagamento aprovado. Troco: R${self.troco:.2f}")
             self.mensageria.enviar_notificacao(

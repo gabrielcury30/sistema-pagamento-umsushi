@@ -1,5 +1,6 @@
-# pagamentos/pix.py
-from pagamentos.base import Pagamento, StatusPagamento, Pedido, Logger, Mensageria 
+from pedido.pedido import Pedido
+from pagamentos.base import Pagamento, StatusPagamento, Logger, Mensageria
+
 import re, random, requests
 
 class Pix(Pagamento):
@@ -19,7 +20,7 @@ class Pix(Pagamento):
 
     def processar_pagamento(self):
         try:
-            self.logger.registrar(f"[PIX] Iniciando pagamento {self.pedido.id}")
+            self.logger.registrar(f"[PIX] Iniciando pagamento para pedido {self.pedido.id}")
             self._validar_chave()
             self.codigo_transacao = self._gerar_qr_code()
 
@@ -28,17 +29,17 @@ class Pix(Pagamento):
             data = resp.json()
             if data.get("answer") == "yes":
                 self.status = StatusPagamento.APROVADO
-                self.logger.registrar(f"[PIX] Aprovado: {self.codigo_transacao}")
+                self.logger.registrar(f"[PIX] Pagamento aprovado: {self.codigo_transacao}")
                 self.mensageria.enviar_notificacao(
-                    f"Olá {self.pedido.cliente.nome}, QR: {self.codigo_transacao}"
+                    f"Olá {self.pedido.cliente.nome}, seu pagamento via PIX foi confirmado. QR: {self.codigo_transacao}"
                 )
             else:
                 raise RuntimeError("Transação PIX recusada pela API")
         except Exception as e:
             self.status = StatusPagamento.RECUSADO
-            self.logger.registrar(f"[PIX] Erro: {e}", nivel="ERROR")
+            self.logger.registrar(f"[PIX] Erro no pagamento: {e}", nivel="ERROR")
         finally:
             self.pedido.status_pagamento = self.status
             recibo = self.pedido.gerar_recibo()
             self.logger.registrar(f"[PIX] Recibo:\n{recibo}")
-            return self.codigo_transacao
+            return self.status

@@ -1,56 +1,77 @@
-# backend/main.py
-from clientes.cadastro import cadastrar_cliente
-from pagamentos.pix         import Pix
-from pagamentos.cartao      import CartaoCredito, CartaoDebito
-from pagamentos.dinheiro     import Dinheiro
-from pagamentos.base        import Pedido, Logger, Mensageria
+# Usa um pedido e tenta pagar, gerando recibo atualizado.
+from clientes.clientes import Cliente
+from clientes.endereco import Endereco
+from pedido.item import Item
+from pedido.pedido import Pedido
+from pagamentos.pix import Pix
+from pagamentos.cartao import CartaoCredito, CartaoDebito
+from pagamentos.dinheiro import Dinheiro
+from pagamentos.base import Logger, Mensageria
 
 def processar_pix():
-    logger = Logger()
+    logger     = Logger()
     mensageria = Mensageria()
-    cliente = cadastrar_cliente()
-    total = float(input("Total do pedido: "))
-    pedido = Pedido(cliente, total)
-    chave_pix = input("Digite a chave PIX: ")
+    endereco_dummy = Endereco("Rua das Flores", 101, "Jardim das Acácias", "São Paulo", "12345000", "")
+    cliente_dummy  = Cliente("Ana Paula", "ana.paula@example.com", "11999998888", endereco_dummy)
+
+    itens = [Item("Produto Teste", 120.50)]
+    pedido = Pedido(cliente_dummy, itens)
+    chave_pix = "ana.paula@pix.com"
     pix = Pix(pedido, chave_pix, logger, mensageria)
     pix.processar_pagamento()
+    print(pedido.gerar_recibo())
 
 def processar_cartao_credito():
     logger     = Logger()
     mensageria = Mensageria()
-    pedido     = Pedido("Maria", 200.75)
-    cc         = CartaoCredito(
+    endereco_dummy = Endereco("Av. Teste", 123, "Bairro Teste", "Cidade Teste", "00000000", "")
+    cliente_dummy  = Cliente("Maria Silva", "maria@teste.com", "81999990000", endereco_dummy)
+
+    itens = [Item("Produto A", 200.75)]
+    pedido = Pedido(cliente_dummy, itens)
+    cc = CartaoCredito(
         pedido,
         numero="1234567890123456",
-        titular="Maria Silva",
+        titular=cliente_dummy.nome,
         validade="12/26",
         cvv="123",
         logger=logger,
         mensageria=mensageria
     )
     cc.processar_pagamento()
+    print(pedido.gerar_recibo())
 
 def processar_cartao_debito():
     logger     = Logger()
     mensageria = Mensageria()
-    pedido     = Pedido("Carlos", 150.00)
-    cd         = CartaoDebito(
+    endereco_dummy = Endereco("Rua Exemplo", 456, "Bairro Exemplo", "Cidade Exemplo", "11111111", "")
+    cliente_dummy  = Cliente("Carlos Souza", "carlos@teste.com", "81988880000", endereco_dummy)
+
+    itens = [Item("Produto B", 150.00)]
+    pedido = Pedido(cliente_dummy, itens)
+    cd = CartaoDebito(
         pedido,
         numero="6543210987654321",
-        titular="Carlos Souza",
+        titular=cliente_dummy.nome,
         validade="11/25",
         cvv="321",
         logger=logger,
         mensageria=mensageria
     )
     cd.processar_pagamento()
+    print(pedido.gerar_recibo())
 
 def processar_dinheiro():
-    logger = Logger()
+    logger     = Logger()
     mensageria = Mensageria()
-    pedido = Pedido("Rafael", 140.00)
+    endereco_dummy = Endereco("Travessa Teste", 789, "Bairro Legal", "Cidade Legal", "22222222", "")
+    cliente_dummy  = Cliente("Rafael Lima", "rafael@teste.com", "81977770000", endereco_dummy)
+
+    itens = [Item("Produto C", 140.00)]
+    pedido = Pedido(cliente_dummy, itens)
     dinheiro = Dinheiro(pedido, 155.00, logger, mensageria)
     dinheiro.processar_pagamento()
+    print(pedido.gerar_recibo())
 
 if __name__ == "__main__":
     print("Escolha o método de pagamento:")
