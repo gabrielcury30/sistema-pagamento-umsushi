@@ -2,10 +2,7 @@
 import random
 from clientes.cadastro import cadastrar_cliente
 from pedido.pedido import Pedido, Item
-from pagamentos.pix import Pix
-from pagamentos.cartao import CartaoCredito, CartaoDebito
-from pagamentos.dinheiro import Dinheiro
-from pagamentos.base import Logger, Mensageria
+from services.pagamento_service import PagamentoService
 
 teste_rapido = True  # True para usar dados fixos, False para input manual.
 
@@ -106,52 +103,46 @@ def criar_pedido(cliente):
     return pedido
 
 
-def escolher_pagamento(pedido, logger, mensageria):
-    if teste_rapido:
-        opcao = random.randint(1, 4)
-        print(f"[Teste Rápido] Método de pagamento sorteado: {opcao}")
-
-        if opcao == 1:
-            chave = "teste-pix-chave"
-            pagamento = Pix(pedido, chave, logger, mensageria)
-            print("[Teste Rápido] Pagamento via PIX simulado.")
-        elif opcao == 2:
-            numero = "1111222233334444"
-            titular = "Teste Cartao Credito"
-            validade = "12/30"
-            cvv = "123"
-            pagamento = CartaoCredito(pedido, numero, titular, validade, cvv, logger, mensageria)
-            print("[Teste Rápido] Pagamento via Cartão de Crédito simulado.")
-        elif opcao == 3:
-            numero = "5555666677778888"
-            titular = "Teste Cartao Debito"
-            validade = "11/29"
-            cvv = "321"
-            pagamento = CartaoDebito(pedido, numero, titular, validade, cvv, logger, mensageria)
-            print("[Teste Rápido] Pagamento via Cartão de Débito simulado.")
-        else:
-            valor_pago = pedido.calcular_total() + 50.0  # valor pago maior para simular troco
-            pagamento = Dinheiro(pedido, valor_pago, logger, mensageria)
-            print(f"[Teste Rápido] Pagamento em dinheiro simulado com valor pago R${valor_pago:.2f}")
-        
-        return pagamento
-
-
 def main():
-    logger = Logger()
-    mensageria = Mensageria()
+    print("=== INICIANDO TESTE COMPLETO DO FLUXO ===")
 
-    cliente = cadastrar_cliente()
-    pedido = criar_pedido(cliente)
+    # 1. Criar cenário
+    cliente = cadastrar_cliente() 
+    pedido = criar_pedido(cliente) 
+    
+    # Se não houver itens no pedido (no caso de input manual), encerra.
+    if not pedido.itens:
+        print("Nenhum item no pedido. Encerrando.")
+        return
 
-    print("\n=== Pagamento ===")
-    pagamento = escolher_pagamento(pedido, logger, mensageria)
-    if pagamento:
-        status = pagamento.processar_pagamento()
-        print(f"\nStatus do pagamento: {status.name}")
+    # 2. Instanciar o Serviço
+    servico_de_pagamento = PagamentoService()
+
+    # 3. Escolher um cenário de pagamento para teste 
+    cenarios_pagamento = [
+        ("PIX", {"chave_pix": "71999998888"}),
+        ("CARTAO_CREDITO", {"numero": "1111222233334444", "titular": "Teste Credito", "validade": "12/30", "cvv": "123"}),
+        ("CARTAO_DEBITO", {"numero": "5555666677778888", "titular": "Teste Debito", "validade": "11/29", "cvv": "321"}),
+        ("DINHEIRO", {"troco_para": pedido.calcular_total() + 20.0})
+    ]
+    
+    # Sorteia um dos cenários
+    metodo_escolhido, dados_pagamento_escolhido = random.choice(cenarios_pagamento)
+    
+    print(f"\n>>> [Teste Rápido] Cenário sorteado: {metodo_escolhido} <<<")
+
+    # 4. EXECUTAR O SERVIÇO
+    try:
+        status_final = servico_de_pagamento.processar_pagamento(
+            pedido=pedido,
+            metodo=metodo_escolhido,
+            dados_pagamento=dados_pagamento_escolhido
+        )
+        print(f"\nResultado Final no Main: Status do pagamento: {status_final.name}")
         print(pedido.gerar_recibo())
-    else:
-        print("Pagamento não realizado.")
+
+    except ValueError as e:
+        print(f"Ocorreu um erro: {e}")
 
 
 if __name__ == "__main__":

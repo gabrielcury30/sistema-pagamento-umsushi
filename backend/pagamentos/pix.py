@@ -15,31 +15,22 @@ class Pix(Pagamento):
             raise ValueError(f"Chave PIX inválida: {self.chave_pix}")
 
     def _gerar_qr_code(self):
-        total_centavos = int(self.pedido.total * 100)
+        total_centavos = int(self.pedido.calcular_total() * 100)
         return f"PIX://{self.chave_pix}/{total_centavos}-{random.randint(0,9999)}"
 
-    def processar_pagamento(self):
-        try:
-            self.logger.registrar(f"[PIX] Iniciando pagamento para pedido {self.pedido.id}")
-            self._validar_chave()
-            self.codigo_transacao = self._gerar_qr_code()
+    def _get_tipo(self) -> str:
+        return "PIX"
+    
+    def _get_status_sucesso(self) -> StatusPagamento:
+        return StatusPagamento.APROVADO
+    
+    def _realizar_cobranca(self):
+        self._validar_chave()
+        self.codigo_transacao = self._gerar_qr_code()
+        
+        resp = requests.get("https://yesno.wtf/api", timeout=5)
+        resp.raise_for_status()  
+        data = resp.json()
 
-            resp = requests.get("https://yesno.wtf/api", timeout=5)
-            resp.raise_for_status()
-            data = resp.json()
-            if data.get("answer") == "yes":
-                self.status = StatusPagamento.APROVADO
-                self.logger.registrar(f"[PIX] Pagamento aprovado: {self.codigo_transacao}")
-                self.mensageria.enviar_notificacao(
-                    f"Olá {self.pedido.cliente.nome}, seu pagamento via PIX foi confirmado. QR: {self.codigo_transacao}"
-                )
-            else:
-                raise RuntimeError("Transação PIX recusada pela API")
-        except Exception as e:
-            self.status = StatusPagamento.RECUSADO
-            self.logger.registrar(f"[PIX] Erro no pagamento: {e}", nivel="ERROR")
-        finally:
-            self.pedido.status_pagamento = self.status
-            recibo = self.pedido.gerar_recibo()
-            self.logger.registrar(f"[PIX] Recibo:\n{recibo}")
-            return self.status
+        if data.get("answer") == "no":
+            raise RuntimeError("Recusa pela operadora do PIX") 

@@ -35,6 +35,33 @@ class Pagamento(ABC):
         self.status = StatusPagamento.PENDENTE
         pedido.definir_pagamento(self)  # liga o pagamento ao pedido
 
-    @abstractmethod
     def processar_pagamento(self):
-        pass
+        try:
+            self.logger.registrar(f"[{self._get_tipo()}] Iniciando pagamento para pedido {self.pedido.id}")
+            self._realizar_cobranca()
+            
+            self.status = self._get_status_sucesso() 
+            self.logger.registrar(f"[{self._get_tipo()}] Status definido como: {self.status.value}")
+            self.mensageria.enviar_notificacao(
+                f"Olá {self.pedido.cliente.nome}, o status do seu pagamento via {self._get_tipo()} é: {self.status.value}"
+            )
+        except Exception as e:
+            self.status = StatusPagamento.RECUSADO
+            self.logger.registrar(f"[{self._get_tipo()}] Erro no pagamento: {e}", nivel="ERROR")
+        finally:
+            self.pedido.status_pagamento = self.status
+            recibo = self.pedido.gerar_recibo()
+            self.logger.registrar(f"[{self._get_tipo()}] Recibo gerado:\n{recibo}")
+            return self.status
+
+@abstractmethod
+def _get_tipo(self) -> str:
+    pass
+
+@abstractmethod
+def _realizar_cobranca(self):
+    pass
+
+@abstractmethod
+def _get_status_sucesso(self) -> StatusPagamento:
+    pass
