@@ -1,3 +1,5 @@
+# Teste para mosrtrar diferentes relatórios.
+
 from datetime import datetime, timedelta
 from pagamentos.base import StatusPagamento
 

@@ -1,8 +1,9 @@
-from clientes.endereco import Endereco
-from clientes.clientes import Cliente
+# Módulo base para processamento e controle de pagamentos.
+
 from abc import ABC, abstractmethod
 from enum import Enum
-import logging
+from infra.logger import Logger
+from infra.mensageria import Mensageria
 
 # --- ENUMS ---
 class StatusPagamento(Enum):
@@ -15,53 +16,65 @@ class TipoCartao(Enum):
     CREDITO = "Crédito"
     DEBITO = "Débito"
 
-# --- Logger e Mensageria simples ---
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
-class Logger:
-    def registrar(self, mensagem: str, nivel: str = "INFO"):
-        getattr(logging, nivel.lower())(mensagem)
-
-class Mensageria:
-    def enviar_notificacao(self, mensagem: str):
-        print(f"[Notificação] {mensagem}")
+class PagamentoException(Exception):
+    """Erro ocorrido durante o processamento de pagamento."""
+    pass
 
 # --- Classe abstrata Pagamento ---
 class Pagamento(ABC):
     def __init__(self, pedido, logger: Logger, mensageria: Mensageria):
+        """Inicializa o pagamento associando ao pedido, logger e sistema de notificações."""
         self.pedido = pedido
         self.logger = logger
         self.mensageria = mensageria
         self.status = StatusPagamento.PENDENTE
-        pedido.definir_pagamento(self)  # liga o pagamento ao pedido
+        pedido.definir_pagamento(self)
 
     def processar_pagamento(self):
+        """Orquestra o fluxo de processamento do pagamento, tratando exceções e registrando resultados."""
         try:
-            self.logger.registrar(f"[{self._get_tipo()}] Iniciando pagamento para pedido {self.pedido.id}")
+            self._registrar_inicio()
             self._realizar_cobranca()
-            
-            self.status = self._get_status_sucesso() 
-            self.logger.registrar(f"[{self._get_tipo()}] Status definido como: {self.status.value}")
-            self.mensageria.enviar_notificacao(
-                f"Olá {self.pedido.cliente.nome}, o status do seu pagamento via {self._get_tipo()} é: {self.status.value}"
-            )
+            self.status = self._get_status_sucesso()
+            self._registrar_status()
+            self._notificar_cliente()
+
         except Exception as e:
             self.status = StatusPagamento.RECUSADO
             self.logger.registrar(f"[{self._get_tipo()}] Erro no pagamento: {e}", nivel="ERROR")
+
         finally:
             self.pedido.status_pagamento = self.status
             recibo = self.pedido.gerar_recibo()
             self.logger.registrar(f"[{self._get_tipo()}] Recibo gerado:\n{recibo}")
             return self.status
 
-@abstractmethod
-def _get_tipo(self) -> str:
-    pass
+    # --- Métodos auxiliares privados ---
+    def _registrar_inicio(self):
+        """Registra no log o início do processamento do pagamento."""
+        self.logger.registrar(f"[{self._get_tipo()}] Iniciando pagamento para pedido {self.pedido.id}")
 
-@abstractmethod
-def _realizar_cobranca(self):
-    pass
+    def _registrar_status(self):
+        """Registra no log o status final do pagamento."""
+        self.logger.registrar(f"[{self._get_tipo()}] Status definido como: {self.status.value}")
 
-@abstractmethod
-def _get_status_sucesso(self) -> StatusPagamento:
-    pass
+    def _notificar_cliente(self):
+        """Envia notificação ao cliente com o status do pagamento."""
+        self.mensageria.enviar_notificacao(
+            f"Olá {self.pedido.cliente.nome}, o status do seu pagamento via {self._get_tipo()} é: {self.status.value}\n"
+        )
+
+    @abstractmethod
+    def _get_tipo(self) -> str:
+        """Retorna o tipo de pagamento (ex: 'Crédito', 'Débito')."""
+        pass
+
+    @abstractmethod
+    def _realizar_cobranca(self):
+        """Executa a lógica específica para realizar a cobrança."""
+        pass
+
+    @abstractmethod
+    def _get_status_sucesso(self) -> StatusPagamento:
+        """Define o status considerado como sucesso para o pagamento."""
+        pass

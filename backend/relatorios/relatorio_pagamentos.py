@@ -1,3 +1,5 @@
+# Módulo de geração de relatórios e estatísticas sobre pagamentos.
+
 from datetime import datetime
 from pagamentos.base import StatusPagamento
 from pedido.pedido import Pedido

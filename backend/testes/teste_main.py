@@ -1,8 +1,10 @@
-# Teste rápido de todas funcionalidades em conjunto.
+# Teste rápido de todas funcionalidades (cadastro, criação de pedido e pagamento) em conjunto.
+
 import random
 from services.clientes_factory import criar_cliente_teste
 from services.pedidos_factory import criar_pedido_teste
 from services.pagamento_service import PagamentoService
+from pagamentos.base import PagamentoException
 
 def main():
     print("=== INICIANDO TESTE COMPLETO DO FLUXO ===")
@@ -38,8 +40,12 @@ def main():
             dados_pagamento=dados_pagamento_escolhido
         )
         print(f"\nResultado Final no Main: Status do pagamento: {status_final.name}")
+    except PagamentoException as e:
+        print(f"Erro no pagamento: {e}")
     except ValueError as e:
-        print(f"Ocorreu um erro: {e}")
+        print(f"Erro de valor inválido: {e}")
+    except Exception as e:
+        print(f"Erro inesperado: {e}")
 
 if __name__ == "__main__":
     main()

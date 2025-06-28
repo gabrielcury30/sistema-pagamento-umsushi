@@ -1,3 +1,5 @@
+# Módulo de geração de relatórios e estatísticas sobre pedidos.
+
 from pedido.pedido import Pedido
 from typing import List, Dict
 from datetime import datetime, timedelta

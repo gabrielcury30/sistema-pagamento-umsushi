@@ -1,3 +1,5 @@
+# Módulo para criação de pedidos de teste com cliente e itens simulados.
+
 from pedido.pedido import Pedido
 from pedido.item import Item
 from services.clientes_factory import criar_cliente_teste
@@ -10,7 +12,6 @@ def criar_pedido_teste(
     Cria um pedido de teste com cliente e lista de itens fornecida.
     Se nenhum cliente for passado, um cliente padrão é criado.
     """
-
     if cliente is None:
         cliente = criar_cliente_teste()
 
@@ -22,6 +23,7 @@ def criar_pedido_teste(
 
 
 if __name__ == "__main__":
+    # Exemplo de uso da factory de pedidos em testes
     pedido = criar_pedido_teste()
     print(f"Pedido criado para: {pedido.cliente.nome}")
     for item in pedido.itens:

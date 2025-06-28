@@ -1,4 +1,5 @@
-# Cria o pedido e mostra o recibo.
+# Teste para criar o pedido e mostrar o recibo.
+
 from clientes.clientes import Cliente
 from clientes.endereco import Endereco
 from pedido.item import Item

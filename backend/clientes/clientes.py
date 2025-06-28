@@ -1,4 +1,5 @@
-# Implementar cadastramento de cliente associado a seu endereco
+# Implementa a classe Cliente associada a um endereço.
+
 from clientes.endereco import Endereco
 
 class Cliente:

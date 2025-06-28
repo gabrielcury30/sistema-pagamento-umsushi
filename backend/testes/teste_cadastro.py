@@ -1,4 +1,5 @@
-# Cadastra clientes e endereços.
+# Teste para cadastrar clientes e endereços.
+
 from clientes.cadastro import cadastrar_cliente
 
 if __name__ == "__main__":

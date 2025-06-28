@@ -1,3 +1,5 @@
+# Módulo de geração de relatórios e estatísticas sobre clientes.
+
 from clientes.clientes import Cliente
 from pedido.pedido import Pedido
 from typing import List, Dict
