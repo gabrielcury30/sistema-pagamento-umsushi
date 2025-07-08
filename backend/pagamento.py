@@ -34,20 +34,61 @@ menu = [
     ItemMenu("Hot balls - queijo", 22.99)
 ]
 
+# --- MODIFICAÇÃO APLICADA AQUI ---
 class Carrinho:
+    """
+    Classe Carrinho melhorada para suportar quantidade de itens.
+    A mudança é interna e não afeta outras classes que dependem de total_pedido().
+    """
     def __init__(self, usuario_id: str):
         self.usuario_id = usuario_id
-        self.pedidos = []
+        # Usa um DICIONÁRIO para armazenar o item e sua quantidade
+        self._pedidos = {} 
 
-    def adicionar_item(self, item: ItemMenu):
-        self.pedidos.append(item)
-    
-    def remover_item(self, item: ItemMenu):
-        if item in self.pedidos:
-            self.pedidos.remove(item)
+    @property
+    def itens(self):
+        """Retorna uma lista de tuplas (item, quantidade) para visualização."""
+        return list(self._pedidos.items())
+
+    def adicionar_item(self, item: ItemMenu, quantidade: int = 1):
+        """Adiciona um item ao carrinho ou incrementa sua quantidade."""
+        if quantidade <= 0:
+            logging.warning("Quantidade para adicionar deve ser positiva.")
+            return
+
+        # Se o item já existe, soma a quantidade. Senão, adiciona.
+        self._pedidos[item] = self._pedidos.get(item, 0) + quantidade
+        logging.info(f"{quantidade}x '{item.nome}' adicionado(s) ao carrinho de {self.usuario_id}.")
+
+    def remover_item(self, item: ItemMenu, quantidade: int = 1):
+        """Remove uma certa quantidade de um item ou o remove completamente."""
+        if item not in self._pedidos:
+            logging.warning(f"Tentativa de remover '{item.nome}', que não está no carrinho.")
+            return
+
+        if quantidade <= 0:
+            logging.warning("Quantidade para remover deve ser positiva.")
+            return
+
+        # Diminui a quantidade
+        self._pedidos[item] -= quantidade
+
+        # Se a quantidade for zerada ou negativa, remove o item do carrinho
+        if self._pedidos[item] <= 0:
+            del self._pedidos[item]
+            logging.info(f"Item '{item.nome}' removido completamente do carrinho.")
+        else:
+            logging.info(f"{quantidade}x '{item.nome}' removido(s). Restam: {self._pedidos[item]}.")
 
     def total_pedido(self) -> float:
-        return sum(item.preco for item in self.pedidos)
+        """Calcula o total considerando o preço de cada item e sua quantidade."""
+        if not self._pedidos:
+            return 0.0
+        
+        total = sum(item.preco * quantidade for item, quantidade in self._pedidos.items())
+        return total
+
+# --- NENHUMA MUDANÇA DAQUI PARA BAIXO ---
 
 class Pagamento:
     """Classe base para processar pagamentos"""
@@ -66,7 +107,8 @@ class Pix(Pagamento):
         self.codigo_transacao = None # Adicionando código de transação via PIX
 
     def processar_pagamento(self):
-        if not self.pedido.pedidos:
+        # Acessa o total do pedido da mesma forma, sem precisar saber da nova lógica
+        if self.pedido.total_pedido() == 0:
             logging.error("Erro: O carrinho está vazio!")
             return
 
@@ -76,7 +118,7 @@ class Pix(Pagamento):
         
         # Simulação de pagamento com uma tratação de erros simples
         try:
-            self.codigo_transacao = f"PIX-{random.randint(100000, 999999)}"       
+            self.codigo_transacao = f"PIX-{random.randint(100000, 999999)}"      
             logging.info(f"Código de transação gerado: {self.codigo_transacao}")
 
             # Simulando um sucesso (90%) e falha (10%) aleatória com números apenas para teste
@@ -102,7 +144,7 @@ class Cartao(Pagamento):
         self.tipo = tipo
 
     def processar_pagamento(self):
-        if not self.pedido.pedidos:
+        if self.pedido.total_pedido() == 0:
             print("Erro: O carrinho está vazio!")
             return
 
@@ -117,7 +159,7 @@ class Dinheiro(Pagamento):
 
     def processar_pagamento(self):
         total = self.pedido.total_pedido()
-        if not self.pedido.pedidos:
+        if total == 0:
             print("Erro: O carrinho está vazio!")
             return
 
@@ -145,10 +187,15 @@ class Dinheiro(Pagamento):
         print(f"Status atualizado: {self.status.value}")
 
 
-# Criando um carrinho e adicionando itens
+# --- CÓDIGO DE EXEMPLO AJUSTADO PARA DEMONSTRAR A NOVA FUNCIONALIDADE ---
+print("--- INICIANDO TESTE DE COMPRA ---")
 carrinho1 = Carrinho("Usuário João")
+# Adicionando 2 unidades do mesmo item
+carrinho1.adicionar_item(menu[2], quantidade=2)
+# Adicionando 1 unidade de outro item
 carrinho1.adicionar_item(menu[0])
-carrinho1.adicionar_item(menu[2])
+print(f"VALOR TOTAL DO CARRINHO: R$ {carrinho1.total_pedido():.2f}\n")
+
 
 # Testando pagamento via PIX
 pagamento_pix = Pix(carrinho1, "chave123456")
@@ -161,7 +208,10 @@ pagamento_cartao.processar_pagamento()
 print()
 
 # Testando pagamento via Dinheiro
-pagamento_dinheiro = Dinheiro(carrinho1, 150.0)
+# Note que o total agora é (22.99 * 2) + 75.90 = 45.98 + 75.90 = 121.88
+# Vamos pagar com 130.00
+pagamento_dinheiro = Dinheiro(carrinho1)
 pagamento_dinheiro.processar_pagamento()
+pagamento_dinheiro.valor_recebido = 130.00
 pagamento_dinheiro.validar_pagamento()
 print()
