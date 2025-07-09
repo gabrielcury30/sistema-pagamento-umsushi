@@ -1,5 +1,6 @@
 # Cadastro de clientes com validação básica e tratamento de erros.
 
+import requests
 from clientes.endereco import Endereco
 from clientes.clientes import Cliente
 
@@ -49,16 +50,51 @@ def obter_numero():
             return int(numero)
         print("Número deve ser um número inteiro.")
 
-def obter_cep():
+
+
+def buscar_endereco_por_cep(cep: str) -> dict:
     """
-    Solicita o CEP do usuário, validando que tenha exatamente
-    8 dígitos numéricos.
+    Faz um request para a API ViaCEP e retorna um dicionário com as chaves:
+    'logradouro', 'bairro' e 'localidade'.
+    Se o CEP não existir ou der erro, lança ValueError.
+    """
+    url = f"https://viacep.com.br/ws/{cep}/json/"
+    resp = requests.get(url, timeout=5)
+    resp.raise_for_status()
+    data = resp.json()
+    if data.get("erro"):
+        raise ValueError("CEP não encontrado.")
+    return {
+        "rua": data["logradouro"],
+        "bairro": data["bairro"],
+        "cidade": data["localidade"],
+    }
+
+
+
+def obter_cep_e_autocompletar() -> dict:
+    """
+    Solicita CEP do usuário, validando que tenha exatamente
+    8 dígitos numéricos, busca na API e retorna
+    os dados de endereço (rua, bairro, cidade).
     """
     while True:
         cep = input("CEP (8 dígitos numéricos): ")
-        if cep.isdigit() and len(cep) == 8:
-            return cep
-        print("CEP inválido. Deve conter exatamente 8 números.")
+        if not (cep.isdigit() and len(cep) == 8):
+            print("CEP inválido. Deve conter exatamente 8 números.")
+            continue
+
+        try:
+            endereco_api = buscar_endereco_por_cep(cep)
+            print(
+                f"Encontrado: {endereco_api['rua']}, "
+                f"{endereco_api['bairro']} - {endereco_api['cidade']}"
+            )
+            return {"cep": cep, **endereco_api}
+        except (requests.RequestException, ValueError) as e:
+            print(f"Não foi possível buscar o CEP: {e}")
+
+
 
 def cadastrar_cliente() -> Cliente:
     """
@@ -79,14 +115,10 @@ def cadastrar_cliente() -> Cliente:
         telefone = obter_telefone()
 
         print("=== Endereço ===")
-        rua = obter_input_validado("Rua: ", validar_texto_com_letra, "Rua")
-        bairro = obter_input_validado("Bairro: ", validar_texto_com_letra, "Bairro")
-        cidade = obter_input_validado("Cidade: ", validar_texto_com_letra, "Cidade")
+        dadosEndereco = obter_cep_e_autocompletar()
         numero = obter_numero()
-        cep = obter_cep()
         complemento = input("Complemento (opcional): ")
-
-        endereco = Endereco(rua, numero, bairro, cidade, cep, complemento)
+        endereco = Endereco(rua=dadosEndereco["rua"], numero=numero, bairro=dadosEndereco["bairro"], cidade=dadosEndereco["cidade"], cep=dadosEndereco["cep"], complemento=complemento)
         cliente = Cliente(nome, email, telefone, endereco)
         return cliente
 
