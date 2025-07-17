@@ -10,12 +10,21 @@ class ValidacaoCartaoException(Exception):
     """Erro de validação dos dados do cartão."""
     pass
 
+def validar_nome_titular(nome: str) -> str:
+    """Valida se o nome do titular contém nome e sobrenome com pelo menos 2 letras cada."""
+    partes = nome.strip().split()
+    if len(partes) < 2 or any(len(part) < 2 for part in partes):
+        raise ValidacaoCartaoException("Nome do titular deve conter nome e sobrenome (mínimo 2 letras cada)")
+    if not all(part.isalpha() for part in partes):
+        raise ValidacaoCartaoException("Nome do titular deve conter apenas letras")
+    return " ".join(partes)
+
 class Cartao(Pagamento, ABC):
-    def __init__(self, pedido, numero, titular, validade, cvv, tipo: TipoCartao, logger, mensageria):
+    def _init_(self, pedido, numero, titular, validade, cvv, tipo: TipoCartao, logger, mensageria):
         """Inicializa os dados do cartão e configura o pagamento."""
-        super().__init__(pedido, logger, mensageria)
+        super()._init_(pedido, logger, mensageria)
         self.numero = numero
-        self.titular = titular
+        self.titular = validar_nome_titular(titular)  # Nova validação
         self.validade = validade
         self.cvv = cvv
         self.tipo = tipo
@@ -47,9 +56,9 @@ class Cartao(Pagamento, ABC):
             raise ValidacaoCartaoException("Cartão expirado.")
 
 class CartaoCredito(Cartao):
-    def __init__(self, pedido, numero, titular, validade, cvv, logger, mensageria):
+    def _init_(self, pedido, numero, titular, validade, cvv, logger, mensageria):
         """Configura um pagamento com cartão de crédito."""
-        super().__init__(pedido, numero, titular, validade, cvv, TipoCartao.CREDITO, logger, mensageria)
+        super()._init_(pedido, numero, titular, validade, cvv, TipoCartao.CREDITO, logger, mensageria)
 
     def _get_tipo(self) -> str:
         """Retorna o tipo do cartão como crédito."""
@@ -63,9 +72,9 @@ class CartaoCredito(Cartao):
             raise RuntimeError("Pagamento recusado pela operadora do cartão de crédito.")
 
 class CartaoDebito(Cartao):
-    def __init__(self, pedido, numero, titular, validade, cvv, logger, mensageria):
+    def _init_(self, pedido, numero, titular, validade, cvv, logger, mensageria):
         """Configura um pagamento com cartão de débito."""
-        super().__init__(pedido, numero, titular, validade, cvv, TipoCartao.DEBITO, logger, mensageria)
+        super()._init_(pedido, numero, titular, validade, cvv, TipoCartao.DEBITO, logger, mensageria)
 
     def _get_tipo(self) -> str:
         """Retorna o tipo do cartão como débito."""
@@ -76,4 +85,4 @@ class CartaoDebito(Cartao):
         self._validar_cartao()
 
         if random.random() >= 0.95:
-            raise RuntimeError("Pagamento recusado pela operadora do cartão de débito.")
+            raise RuntimeError("Pagamento recusado pela operadora do cartão de débito.")
