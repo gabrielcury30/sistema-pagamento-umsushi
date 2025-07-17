@@ -1,12 +1,13 @@
 # Cadastro de clientes com validação básica e tratamento de erros.
 
 import requests
+import re
 from clientes.endereco import Endereco
 from clientes.clientes import Cliente
 
 def validar_texto_com_letra(valor: str, campo: str) -> str:
     """
-    Valida se a string `valor` contém pelo menos uma letra e
+    Valida se a string valor contém pelo menos uma letra e
     tem no mínimo 2 caracteres não vazios.
     """
     if not any(c.isalpha() for c in valor) or len(valor.strip()) < 2:
@@ -16,7 +17,7 @@ def validar_texto_com_letra(valor: str, campo: str) -> str:
 def obter_input_validado(mensagem: str, validador, campo: str):
     """
     Solicita entrada do usuário repetidamente até que o valor
-    informado seja validado pela função `validador`.
+    informado seja validado pela função validador.
     """
     while True:
         try:
@@ -95,6 +96,12 @@ def obter_cep_e_autocompletar() -> dict:
             print(f"Não foi possível buscar o CEP: {e}")
 
 
+def validar_email(email: str) -> str:
+    """Valida o formato do email usando regex simples."""
+    if not re.fullmatch(r"[^@]+@[^@]+\.[^@]+", email):
+        raise ValueError("Email inválido. Deve estar no formato nome@dominio.com")
+    return email
+
 
 def cadastrar_cliente() -> Cliente:
     """
@@ -106,11 +113,7 @@ def cadastrar_cliente() -> Cliente:
 
         nome = obter_input_validado("Nome: ", validar_texto_com_letra, "Nome")
         
-        # Validação simples do email: precisa conter '@' e '.'
-        email = input("Email: ")
-        while "@" not in email or "." not in email:
-            print("Email inválido. Digite um email válido.")
-            email = input("Email: ")
+        email = obter_input_validado("Email: ", validar_email, "Email")
 
         telefone = obter_telefone()
 
