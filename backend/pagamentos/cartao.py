@@ -21,39 +21,34 @@ def validar_nome_titular(nome: str) -> str:
 
 class Cartao(Pagamento, ABC):
     def __init__(self, pedido, numero, titular, validade, cvv, tipo: TipoCartao, logger, mensageria):
-        """Inicializa os dados do cartão e configura o pagamento."""
+        """Inicializa os dados do cartão sem validar ainda."""
         super().__init__(pedido, logger, mensageria)
         self.numero = numero
-        self.titular = validar_nome_titular(titular)  # Nova validação
+        self.titular = titular
         self.validade = validade
         self.cvv = cvv
         self.tipo = tipo
 
     def _get_status_sucesso(self) -> StatusPagamento:
-        """Define o status de sucesso como aprovado para cartões."""
         return StatusPagamento.APROVADO
 
     def _validar_cartao(self):
-        """Valida o número, CVV e validade do cartão."""
+        validar_nome_titular(self.titular)
         if not re.fullmatch(r"\d{16}", self.numero):
             raise ValidacaoCartaoException("Número do cartão deve conter 16 dígitos numéricos.")
-
         if not re.fullmatch(r"\d{3}", self.cvv):
             raise ValidacaoCartaoException("CVV deve conter 3 dígitos numéricos.")
-
         self._validar_validade()
 
     def _validar_validade(self):
-        """Verifica o formato MM/AA da validade e se o cartão não está expirado."""
         if not re.fullmatch(r"(0[1-9]|1[0-2])/\d{2}", self.validade):
             raise ValidacaoCartaoException("Validade deve estar no formato MM/AA.")
-
         mes, ano = map(int, self.validade.split("/"))
         ano_completo = 2000 + ano
         hoje = datetime.now()
-
         if ano_completo < hoje.year or (ano_completo == hoje.year and mes < hoje.month):
             raise ValidacaoCartaoException("Cartão expirado.")
+        
 
 class CartaoCredito(Cartao):
     def __init__(self, pedido, numero, titular, validade, cvv, logger, mensageria):

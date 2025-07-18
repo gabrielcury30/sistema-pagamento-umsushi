@@ -2,30 +2,27 @@
 
 import logging
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
 class Logger:
-    def _init_(self, log_file: str = None):
-        """Inicializa o logger com opção de arquivo de log."""
-        self.logger = logging.getLogger(_name_)
+    def __init__(self, log_file: str = None):  # <-- Correção aqui
+        self.logger = logging.getLogger(__name__)  # <-- Correção aqui
         self.logger.setLevel(logging.INFO)
-        
+
         formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-        
-        # Handler para console
+
+        # Console
         ch = logging.StreamHandler()
         ch.setFormatter(formatter)
         self.logger.addHandler(ch)
-        
-        # Handler para arquivo, se especificado
+
+        # Arquivo (se aplicável)
         if log_file:
             fh = logging.FileHandler(log_file)
             fh.setFormatter(formatter)
             self.logger.addHandler(fh)
 
     def registrar(self, mensagem: str, nivel: str = "INFO"):
-        nivel = nivel.upper()
-        if hasattr(self.logger, nivel.lower()):
-            getattr(self.logger, nivel.lower())(mensagem)
+        nivel = nivel.lower()
+        if hasattr(self.logger, nivel):
+            getattr(self.logger, nivel)(mensagem)
         else:
             self.logger.info(mensagem)

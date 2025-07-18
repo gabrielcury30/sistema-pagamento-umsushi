@@ -51,8 +51,6 @@ def obter_numero():
             return int(numero)
         print("Número deve ser um número inteiro.")
 
-
-
 def buscar_endereco_por_cep(cep: str) -> dict:
     """
     Faz um request para a API ViaCEP e retorna um dicionário com as chaves:
@@ -70,8 +68,6 @@ def buscar_endereco_por_cep(cep: str) -> dict:
         "bairro": data["bairro"],
         "cidade": data["localidade"],
     }
-
-
 
 def obter_cep_e_autocompletar() -> dict:
     """
@@ -95,13 +91,11 @@ def obter_cep_e_autocompletar() -> dict:
         except (requests.RequestException, ValueError) as e:
             print(f"Não foi possível buscar o CEP: {e}")
 
-
-def validar_email(email: str) -> str:
+def validar_email(valor: str, campo: str) -> str:
     """Valida o formato do email usando regex simples."""
-    if not re.fullmatch(r"[^@]+@[^@]+\.[^@]+", email):
-        raise ValueError("Email inválido. Deve estar no formato nome@dominio.com")
-    return email
-
+    if not re.fullmatch(r"[^@]+@[^@]+\.[^@]+", valor):
+        raise ValueError(f"{campo} inválido. Deve estar no formato nome@dominio.com")
+    return valor
 
 def cadastrar_cliente() -> Cliente:
     """

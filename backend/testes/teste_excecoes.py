@@ -23,7 +23,7 @@ def testar_validacao_cartao_credito():
     esperando capturar exceções em dados inválidos como número com menos de 16 dígitos.
     """
     try:
-        cartao = CartaoCredito(pedido, "123", "Teste", "12/26", "123", logger, mensageria)
+        cartao = CartaoCredito(pedido, "123", "André Silva", "12/26", "123", logger, mensageria)
         cartao._validar_cartao()
     except ValidacaoCartaoException as e:
         print(f"Cartão Crédito - Erro capturado como esperado: {e}")
