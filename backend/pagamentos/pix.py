@@ -6,16 +6,16 @@ import requests
 from pedido.pedido import Pedido
 from pagamentos.base import Pagamento, StatusPagamento, PagamentoException
 from infra.logger import Logger
-from infra.mensageria import Mensageria
+from infra.notificacao_service import NotificacaoService
 
 class ValidacaoPixException(PagamentoException):
     """Erro de validação da chave PIX."""
     pass
 
 class Pix(Pagamento):
-    def __init__(self, pedido: Pedido, chave_pix: str, logger: Logger, mensageria: Mensageria):
+    def __init__(self, pedido: Pedido, chave_pix: str, logger: Logger, notificacao: NotificacaoService):
         """Inicializa pagamento via PIX validando a chave informada."""
-        super().__init__(pedido, logger, mensageria)
+        super().__init__(pedido, logger, notificacao)
         self.chave_pix = chave_pix
         self.codigo_transacao = None
         self._validar_chave()

@@ -5,7 +5,7 @@ from services.payment_factory import PagamentoFactory
 from pedido.pedido import Pedido
 from pagamentos.base import StatusPagamento
 from infra.logger import Logger
-from infra.mensageria import Mensageria
+from infra.notificacao_service import NotificacaoService
 
 class PagamentoService:
     """
@@ -14,7 +14,7 @@ class PagamentoService:
     """
     def __init__(self):
         self.logger = Logger()
-        self.mensageria = Mensageria()
+        self.notificacao = NotificacaoService()
         self.factory = PagamentoFactory()
 
     def processar_pagamento(self, pedido: Pedido, metodo: str, dados_pagamento: dict):
@@ -30,7 +30,7 @@ class PagamentoService:
                 pedido=pedido,
                 dados_pagamento=dados_pagamento,
                 logger=self.logger,
-                mensageria=self.mensageria
+                notificacao=self.notificacao
             )
 
             resultado = pagamento_obj.processar_pagamento()
@@ -40,18 +40,18 @@ class PagamentoService:
 
         except PagamentoException as pe:
             self.logger.registrar(f"[ERRO] Falha no pagamento: {pe}", nivel="ERROR")
-            self.mensageria.enviar_notificacao(f"Erro no pagamento: {pe}")
+            self.notificacao.enviar_notificacao(f"Erro no pagamento: {pe}")
             pedido.status_pagamento = StatusPagamento.RECUSADO
             return StatusPagamento.RECUSADO
 
         except ValueError as ve:
             self.logger.registrar(f"[ERRO] Dados inválidos para o método '{metodo}': {ve}", nivel="ERROR")
-            self.mensageria.enviar_notificacao(f"Erro nos dados do pagamento: {ve}")
+            self.notificacao.enviar_notificacao(f"Erro nos dados do pagamento: {ve}")
             pedido.status_pagamento = StatusPagamento.RECUSADO
             return StatusPagamento.RECUSADO
 
         except Exception as e:
             self.logger.registrar(f"[ERRO] Erro inesperado ao processar pagamento: {e}", nivel="ERROR")
-            self.mensageria.enviar_notificacao("Erro inesperado ao processar o pagamento. Tente novamente.")
+            self.notificacao.enviar_notificacao("Erro inesperado ao processar o pagamento. Tente novamente.")
             pedido.status_pagamento = StatusPagamento.RECUSADO
             return StatusPagamento.RECUSADO

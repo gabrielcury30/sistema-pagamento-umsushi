@@ -9,16 +9,16 @@ from pedido.item import Item
 from clientes.endereco import Endereco
 from clientes.clientes import Cliente
 from infra.logger import Logger
-from infra.mensageria import Mensageria
+from infra.notificacao_service import NotificacaoService
 
 class PagamentoFactory:
     """
     Fábrica de objetos de pagamento.
     Retorna a instância correta com base no método informado.
     """
-    def criar(self, metodo: str, pedido: Pedido, dados_pagamento: dict, logger: Logger, mensageria: Mensageria) -> Pagamento:
+    def criar(self, metodo: str, pedido: Pedido, dados_pagamento: dict, logger: Logger, notificacao: NotificacaoService) -> Pagamento:
         metodo = metodo.upper()
-        args_comuns = {"pedido": pedido, "logger": logger, "mensageria": mensageria}
+        args_comuns = {"pedido": pedido, "logger": logger, "notificacao": notificacao}
 
         if metodo == "PIX":
             chave_pix = dados_pagamento.get("chave_pix")
@@ -51,12 +51,12 @@ if __name__ == "__main__":
     pedido = Pedido(cliente, itens)
 
     logger = Logger()
-    mensageria = Mensageria()
+    notificacao = NotificacaoService()
 
     factory = PagamentoFactory()
 
     dados_pagamento = {"troco_para": 100.0}
-    pagamento = factory.criar("DINHEIRO", pedido, dados_pagamento, logger, mensageria)
+    pagamento = factory.criar("DINHEIRO", pedido, dados_pagamento, logger, notificacao)
     status = pagamento.processar_pagamento()
 
     print(f"Status: {status.name}")

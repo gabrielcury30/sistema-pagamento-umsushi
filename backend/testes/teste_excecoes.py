@@ -8,10 +8,10 @@ from services.clientes_factory import criar_cliente_teste
 from services.pedidos_factory import criar_pedido_teste
 from pedido.pedido import Pedido, PedidoInvalidoException 
 from infra.logger import Logger
-from infra.mensageria import Mensageria
+from infra.notificacao_service import NotificacaoService
 
 logger = Logger()
-mensageria = Mensageria()
+notificacao = NotificacaoService()
 cliente = criar_cliente_teste()
 pedido = criar_pedido_teste(cliente)
 
@@ -23,7 +23,7 @@ def testar_validacao_cartao_credito():
     esperando capturar exceções em dados inválidos como número com menos de 16 dígitos.
     """
     try:
-        cartao = CartaoCredito(pedido, "123", "André Silva", "12/26", "123", logger, mensageria)
+        cartao = CartaoCredito(pedido, "123", "André Silva", "12/26", "123", logger, notificacao)
         cartao._validar_cartao()
     except ValidacaoCartaoException as e:
         print(f"Cartão Crédito - Erro capturado como esperado: {e}")
@@ -36,7 +36,7 @@ def testar_validacao_cartao_debito():
     esperando capturar exceções para CVV inválido e validade expirada.
     """
     try:
-        cartao = CartaoDebito(pedido, "1234567890123456", "Teste", "11/20", "12", logger, mensageria)
+        cartao = CartaoDebito(pedido, "1234567890123456", "Teste", "11/20", "12", logger, notificacao)
         cartao._validar_cartao()
     except ValidacaoCartaoException as e:
         print(f"Cartão Débito - Erro capturado como esperado: {e}")
@@ -52,7 +52,7 @@ def testar_pagamento_dinheiro_valor_negativo():
     """
     valor_pago = -50
     try:
-        dinheiro = Dinheiro(pedido, valor_pago, logger, mensageria)
+        dinheiro = Dinheiro(pedido, valor_pago, logger, notificacao)
         dinheiro._realizar_cobranca()
     except PagamentoException as e:
         print(f"Erro capturado como esperado (valor negativo): {e}")
@@ -64,7 +64,7 @@ def testar_pagamento_dinheiro_valor_menor():
     Testa o pagamento em dinheiro com valor pago menor que o total do pedido,
     esperando capturar exceção na cobrança.
     """
-    dinheiro = Dinheiro(pedido, valor_pago=50.0, logger=logger, mensageria=mensageria)
+    dinheiro = Dinheiro(pedido, valor_pago=50.0, logger=logger, notificacao=notificacao)
     try:
         dinheiro._realizar_cobranca()
     except PagamentoException as e:
@@ -78,7 +78,7 @@ def testar_pagamento_dinheiro_valor_igual():
     esperando que o pagamento seja aceito sem troco.
     """
     valor_pago = pedido.calcular_total()
-    dinheiro = Dinheiro(pedido, valor_pago, logger, mensageria)
+    dinheiro = Dinheiro(pedido, valor_pago, logger, notificacao)
     try:
         dinheiro._realizar_cobranca()
         print("Pagamento em dinheiro com valor exato realizado com sucesso.")
@@ -91,7 +91,7 @@ def testar_pagamento_dinheiro_com_troco():
     verificando se o troco é calculado corretamente.
     """
     valor_pago = pedido.calcular_total() + 20
-    dinheiro = Dinheiro(pedido, valor_pago, logger, mensageria)
+    dinheiro = Dinheiro(pedido, valor_pago, logger, notificacao)
     try:
         dinheiro._realizar_cobranca()
         print(f"Pagamento com troco realizado com sucesso. Troco: R${dinheiro.troco:.2f}")
@@ -106,7 +106,7 @@ def testar_validacao_chave_pix_invalida():
     Espera capturar uma exceção ValidacaoPixException ao criar o objeto Pix com chave inválida.
     """
     try:
-        pix = Pix(pedido, "chave_invalida", logger, mensageria)
+        pix = Pix(pedido, "chave_invalida", logger, notificacao)
     except ValidacaoPixException as e:
         print(f"PIX - Erro capturado como esperado: {e}")
 
@@ -116,7 +116,7 @@ def testar_rejeicao_operadora_pix():
     uma resposta negativa da API externa.
     Espera capturar um PagamentoException.
     """
-    pix = Pix(pedido, "teste@pix.com", logger, mensageria)
+    pix = Pix(pedido, "teste@pix.com", logger, notificacao)
 
     # Monkeypatch para simular resposta negativa da API externa
     class MockResponse:

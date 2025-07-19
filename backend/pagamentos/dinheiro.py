@@ -3,7 +3,7 @@
 from pedido.pedido import Pedido
 from pagamentos.base import Pagamento, StatusPagamento
 from infra.logger import Logger
-from infra.mensageria import Mensageria
+from infra.notificacao_service import NotificacaoService
 from pagamentos.base import PagamentoException
 
 class ValidacaoDinheiroException(PagamentoException):
@@ -11,9 +11,9 @@ class ValidacaoDinheiroException(PagamentoException):
     pass
 
 class Dinheiro(Pagamento):
-    def __init__(self, pedido: Pedido, valor_pago: float, logger: Logger, mensageria: Mensageria):
+    def __init__(self, pedido: Pedido, valor_pago: float, logger: Logger, notificacao: NotificacaoService):
         """Inicializa pagamento em dinheiro e valida valor pago."""
-        super().__init__(pedido, logger, mensageria)
+        super().__init__(pedido, logger, notificacao)
         
         if not isinstance(valor_pago, (int, float)) or valor_pago < 0:
             raise ValidacaoDinheiroException("Valor pago deve ser um número positivo ou zero.")

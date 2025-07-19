@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from enum import Enum
 from infra.logger import Logger
-from infra.mensageria import Mensageria
+from infra.notificacao_service import NotificacaoService
 
 # --- ENUMS ---
 class StatusPagamento(Enum):
@@ -22,11 +22,11 @@ class PagamentoException(Exception):
 
 # --- Classe abstrata Pagamento ---
 class Pagamento(ABC):
-    def __init__(self, pedido, logger: Logger, mensageria: Mensageria):
+    def __init__(self, pedido, logger: Logger, notificacao: NotificacaoService):
         """Inicializa o pagamento associando ao pedido, logger e sistema de notificações."""
         self.pedido = pedido
         self.logger = logger
-        self.mensageria = mensageria
+        self.notificacao = NotificacaoService
         self.status = StatusPagamento.PENDENTE
         pedido.definir_pagamento(self)
 
@@ -60,7 +60,7 @@ class Pagamento(ABC):
 
     def _notificar_cliente(self):
         """Envia notificação ao cliente com o status do pagamento."""
-        self.mensageria.enviar_notificacao(
+        self.notificacao.enviar_notificacao(
             f"Olá {self.pedido.cliente.nome}, o status do seu pagamento via {self._get_tipo()} é: {self.status.value}\n"
         )
 

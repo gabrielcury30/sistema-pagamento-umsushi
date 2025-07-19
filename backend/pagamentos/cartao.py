@@ -20,9 +20,9 @@ def validar_nome_titular(nome: str) -> str:
     return " ".join(partes)
 
 class Cartao(Pagamento, ABC):
-    def __init__(self, pedido, numero, titular, validade, cvv, tipo: TipoCartao, logger, mensageria):
+    def __init__(self, pedido, numero, titular, validade, cvv, tipo: TipoCartao, logger, notificacao):
         """Inicializa os dados do cartão sem validar ainda."""
-        super().__init__(pedido, logger, mensageria)
+        super().__init__(pedido, logger, notificacao)
         self.numero = numero
         self.titular = titular
         self.validade = validade
@@ -51,9 +51,9 @@ class Cartao(Pagamento, ABC):
         
 
 class CartaoCredito(Cartao):
-    def __init__(self, pedido, numero, titular, validade, cvv, logger, mensageria):
+    def __init__(self, pedido, numero, titular, validade, cvv, logger, notificacao):
         """Configura um pagamento com cartão de crédito."""
-        super().__init__(pedido, numero, titular, validade, cvv, TipoCartao.CREDITO, logger, mensageria)
+        super().__init__(pedido, numero, titular, validade, cvv, TipoCartao.CREDITO, logger, notificacao)
 
     def _get_tipo(self) -> str:
         """Retorna o tipo do cartão como crédito."""
@@ -67,9 +67,9 @@ class CartaoCredito(Cartao):
             raise RuntimeError("Pagamento recusado pela operadora do cartão de crédito.")
 
 class CartaoDebito(Cartao):
-    def __init__(self, pedido, numero, titular, validade, cvv, logger, mensageria):
+    def __init__(self, pedido, numero, titular, validade, cvv, logger, notificacao):
         """Configura um pagamento com cartão de débito."""
-        super().__init__(pedido, numero, titular, validade, cvv, TipoCartao.DEBITO, logger, mensageria)
+        super().__init__(pedido, numero, titular, validade, cvv, TipoCartao.DEBITO, logger, notificacao)
 
     def _get_tipo(self) -> str:
         """Retorna o tipo do cartão como débito."""

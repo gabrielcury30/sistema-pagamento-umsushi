@@ -3,8 +3,8 @@
 import logging
 
 class Logger:
-    def __init__(self, log_file: str = None):  # <-- Correção aqui
-        self.logger = logging.getLogger(__name__)  # <-- Correção aqui
+    def __init__(self, log_file: str = None):
+        self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.INFO)
 
         formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
