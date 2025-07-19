@@ -57,7 +57,7 @@ class CartaoCredito(Cartao):
 
     def _get_tipo(self) -> str:
         """Retorna o tipo do cartão como crédito."""
-        return "CREDITO"
+        return self.tipo.value
 
     def _realizar_cobranca(self):
         """Valida o cartão e simula a cobrança, com 15% de chance de recusa."""
@@ -73,7 +73,7 @@ class CartaoDebito(Cartao):
 
     def _get_tipo(self) -> str:
         """Retorna o tipo do cartão como débito."""
-        return "DEBITO"
+        return self.tipo.value
 
     def _realizar_cobranca(self):
         """Valida o cartão e simula a cobrança, com 5% de chance de recusa."""
