@@ -24,6 +24,9 @@ class PagamentoService:
         """
         self.logger.registrar(f"--- SERVIÇO DE PAGAMENTO INICIADO PARA MÉTODO {metodo} ---")
 
+        if not isinstance(dados_pagamento, dict):
+            raise ValueError("`dados_pagamento` deve ser um dicionário.")
+
         try:
             pagamento_obj = self.factory.criar(
                 metodo=metodo,

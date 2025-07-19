@@ -27,7 +27,7 @@ def main():
         ("PIX", {"chave_pix": "71999998888"}),
         ("CARTAO_CREDITO", {"numero": "1111222233334444", "titular": "Teste Credito", "validade": "12/30", "cvv": "123"}),
         ("CARTAO_DEBITO", {"numero": "5555666677778888", "titular": "Teste Debito", "validade": "11/29", "cvv": "321"}),
-        ("DINHEIRO", {"troco_para": pedido.calcular_total() + 20.0})
+        ("DINHEIRO", {"valor_pago": pedido.calcular_total() + 20.0})
     ]
 
     metodo_escolhido, dados_pagamento_escolhido = random.choice(cenarios_pagamento)

@@ -33,9 +33,9 @@ class PagamentoFactory:
             return CartaoDebito(**args_comuns, **dados_pagamento)
 
         elif metodo == "DINHEIRO":
-            valor_pago = dados_pagamento.get("troco_para")
+            valor_pago = dados_pagamento.get("valor_pago")
             if valor_pago is None:
-                raise PagamentoException("Campo 'troco_para' é obrigatório para pagamento em dinheiro.")
+                raise PagamentoException("Campo 'valor_pago' é obrigatório para pagamento em dinheiro.")
             return Dinheiro(**args_comuns, valor_pago=valor_pago)
 
         else:
