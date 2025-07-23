@@ -26,7 +26,7 @@ class Pagamento(ABC):
         """Inicializa o pagamento associando ao pedido, logger e sistema de notificações."""
         self.pedido = pedido
         self.logger = logger
-        self.notificacao = NotificacaoService
+        self.notificacao = notificacao
         self.status = StatusPagamento.PENDENTE
         pedido.definir_pagamento(self)
 
