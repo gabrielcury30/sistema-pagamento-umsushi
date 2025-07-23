@@ -5,13 +5,18 @@ import re
 from clientes.endereco import Endereco
 from clientes.clientes import Cliente
 
-def validar_texto_com_letra(valor: str, campo: str) -> str:
+def validar_nome_completo(valor: str, campo: str) -> str:
     """
-    Valida se a string valor contém pelo menos uma letra e
-    tem no mínimo 2 caracteres não vazios.
+    Valida se o nome contém nome e sobrenome com pelo menos 2 letras cada,
+    apenas letras, e não está vazio.
     """
-    if not any(c.isalpha() for c in valor) or len(valor.strip()) < 2:
-        raise ValueError(f"{campo} inválido. Deve conter ao menos uma letra e ter pelo menos 2 caracteres.")
+    partes = valor.strip().split()
+    if len(partes) < 2:
+        raise ValueError(f"{campo} inválido. Deve conter nome e sobrenome.")
+    if any(len(p) < 2 for p in partes):
+        raise ValueError(f"{campo} inválido. Cada parte deve ter ao menos 2 letras.")
+    if not all(p.isalpha() for p in partes):
+        raise ValueError(f"{campo} inválido. Deve conter apenas letras.")
     return valor
 
 def obter_input_validado(mensagem: str, validador, campo: str):
@@ -105,8 +110,8 @@ def cadastrar_cliente() -> Cliente:
     try:
         print("=== Cadastro de Cliente ===")
 
-        nome = obter_input_validado("Nome: ", validar_texto_com_letra, "Nome")
-        
+        nome = obter_input_validado("Nome e Sobrenome: ", validar_nome_completo, "Nome")
+
         email = obter_input_validado("Email: ", validar_email, "Email")
 
         telefone = obter_telefone()
@@ -115,7 +120,14 @@ def cadastrar_cliente() -> Cliente:
         dadosEndereco = obter_cep_e_autocompletar()
         numero = obter_numero()
         complemento = input("Complemento (opcional): ")
-        endereco = Endereco(rua=dadosEndereco["rua"], numero=numero, bairro=dadosEndereco["bairro"], cidade=dadosEndereco["cidade"], cep=dadosEndereco["cep"], complemento=complemento)
+        endereco = Endereco(
+            rua=dadosEndereco["rua"],
+            numero=numero,
+            bairro=dadosEndereco["bairro"],
+            cidade=dadosEndereco["cidade"],
+            cep=dadosEndereco["cep"],
+            complemento=complemento
+        )
         cliente = Cliente(nome, email, telefone, endereco)
         return cliente
 
